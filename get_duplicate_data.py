@@ -3,10 +3,12 @@ import xlwings
 import time
 import start_ex
 import pandas as pd
+import xarray as xr
+import numpy as np
 from datetime import datetime
 import schedule
 
-CODE = '6554'
+CODE_LIST = ['6554', '4412']
 
 
 def read_xlwings():
@@ -24,32 +26,81 @@ def read_xlwings():
 
 
 def set_macro(sheet):
-    sheet.range('A2').value = ["時刻", "出来高", "約定値"]
-    sheet.range('A1').value = "=@RssTickList($A$2:$C$2,\""+CODE+".T\",100)"
+    for index, code in enumerate(CODE_LIST):
+        sheet.cells(2, 1+index*3).value = ["時刻", "出来高", "約定値"]
+        sheet.cells(
+            1, 1+index*3).value = "=@RssTickList(,\"" + code+".T\",100)"
 
 
 def get_step_value(sheet):
-    duplicates_df = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
+
     n = 0
     start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
     fin_am = datetime.strptime("11:30:30", '%H:%M:%S').time()
     start_pm = datetime.strptime("12:29:00", '%H:%M:%S').time()
     fin_pm = datetime.strptime("15:00:30", '%H:%M:%S').time()
+
+    # dataframeを銘柄分作成（結構頭悪い処理）
+    df_list = {}
+    for code in CODE_LIST:
+        df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
+
+    # 場中動く処理
     while start_am < datetime.today().time() < fin_am or\
             start_pm < datetime.today().time() < fin_pm:
         time.sleep(1)
-        duplicates_df = duplicates_df.append(pd.DataFrame(sheet.range('A3:C103').value, columns=[
-            "時刻", "出来高", "約定値"]))
+        # 銘柄ごとに動く処理
+        for index, code in enumerate(CODE_LIST):
+            df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[
+                "時刻", "出来高", "約定値"]))
         n += 1
         print("取得回数："+str(n))
 
-    duplicates_df = duplicates_df.reset_index(drop=True)
-    fname = 'data/'+CODE+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
-    duplicates_df.to_csv(fname, encoding='cp932')
+    # 保存
+    for code in CODE_LIST:
+        df_list[code] = df_list[code].reset_index(drop=True)
+        fname = 'data/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
+        df_list[code].to_csv(fname, encoding='cp932')
     print("保存完了")
 
     if datetime.today().time() >= fin_pm:
         exit()  # ほんとはここじゃない
+
+
+def test():
+    # test = np.zeros((len(CODE_LIST), 1, 3))
+    # print(test)
+    # test[0, :, :] = np.append(test[0, :, :], [[1, 1, 1]], axis=0)
+    # print(test)
+    app = start_ex.xw_apps_add_fixed()
+    # app.visible = False
+    wb = app.books.add()
+    sheet = wb.sheets["Sheet1"]
+    set_macro(sheet)  # dataframeを銘柄分作成（結構頭悪い処理）
+    df_list = {}
+    for code in CODE_LIST:
+        df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
+
+    # # 場中動く処理
+    # while start_am < datetime.today().time() < fin_am or\
+    #         start_pm < datetime.today().time() < fin_pm:
+    time.sleep(1)
+    # 銘柄ごとに動く処理
+    for index, code in enumerate(CODE_LIST):
+        df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[
+            "時刻", "出来高", "約定値"]))
+    # duplicates_df = duplicates_df.append(pd.DataFrame(sheet.range('A3:C103').value, columns=[
+    #     "時刻", "出来高", "約定値"]))
+
+    # 保存
+    for code in CODE_LIST:
+        df_list[code] = df_list[code].reset_index(drop=True)
+        fname = 'data/test/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
+        df_list[code].to_csv(fname, encoding='cp932')
+    # duplicates_df = duplicates_df.reset_index(drop=True)
+    # fname = 'data/'+CODE_LIST+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
+    # duplicates_df.to_csv(fname, encoding='cp932')
+    print("保存完了")
 
 
 def main():
@@ -58,6 +109,7 @@ def main():
     while True:
         schedule.run_pending()
         time.sleep(1)
+    # test()
 
 
 if __name__ == '__main__':
