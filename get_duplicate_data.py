@@ -7,6 +7,7 @@ import xarray as xr
 import numpy as np
 from datetime import datetime
 import schedule
+from remove_duplicate_data import remove_duplicate
 
 CODE_LIST = ['6554', '4412']
 
@@ -51,8 +52,11 @@ def get_step_value(sheet):
         time.sleep(1)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
-            df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[
-                "時刻", "出来高", "約定値"]))
+            # df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[
+            #     "時刻", "出来高", "約定値"]))
+            df_list[code] = remove_duplicate(df_list[code], \
+                pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"]))
+
         n += 1
         print("取得回数："+str(n))
 
