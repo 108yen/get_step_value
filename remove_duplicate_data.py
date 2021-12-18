@@ -36,12 +36,6 @@ def main():
                         j = 1
                         while j+i < len(in_data) and j < len(unique_df):
                             if not compare_df(unique_df[j:j+1], in_data[i+j:i+j+1]):
-                                print('最初のデータ')
-                                print(unique_df[:1])
-                                print(in_data[i:i+1])
-                                print('不一致のデータ')
-                                print(unique_df[j:j+1])
-                                print(in_data[i+j:i+j+1])
                                 i += 1
                                 break
                             j += 1
