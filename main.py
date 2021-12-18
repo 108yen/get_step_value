@@ -5,6 +5,8 @@ import start_ex
 import pandas as pd
 from datetime import datetime
 
+# todo：GUIでチャート作成
+
 
 def read_openpyxl():
     # wb_w = openpyxl.load_workbook("Sample.xlsx")
