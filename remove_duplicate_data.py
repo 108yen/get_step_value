@@ -40,6 +40,7 @@ def remove_duplicate(original_df, input_df):
 
                 # 一致するのがなかったらすべて新しいデータなので全部追加
                 if i == len(input_df):
+                    print(input_df[:1])
                     original_df = pd.concat([input_df.dropna(), original_df])\
                             .reset_index(drop=True)
                     flag = False
