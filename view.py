@@ -40,7 +40,7 @@ def start_button_click(event):
 
 
 def update_canvas():
-    fname = '9212_20211228_1130.csv'
+    fname = '9212_20211228_1500.csv'
     input_fname = 'data/'+fname
     row_df = pd.read_csv(input_fname, header=0, index_col=0,
                          encoding='cp932').iloc[::-1]
@@ -55,6 +55,10 @@ def update_canvas():
     while ini_time > split5m.time():
         split5m = split5m+timedelta(minutes=5)
 
+    canvas.create_line(15, defy, 15, defy, tag='line0')
+    canvas.create_rectangle(10, defy, 20, defy, fill='red', tag='rect0')
+    canvas.create_text(60, defy, text='', tag='value')
+
     for index, data in row_df.iterrows():
         time.sleep(0.01)
         gap = int(data['約定値'])-ini_val
@@ -63,6 +67,7 @@ def update_canvas():
         fx = sx+10
         fy = defy-gap
         linex = sx+5
+        # 5分足を分けるための処理
         if split5m.time() < datetime.strptime(data['時刻'], '%H:%M:%S').time():
             split5m = split5m+timedelta(minutes=5)
             minutes_num += 1
@@ -90,13 +95,21 @@ def update_canvas():
                 canvas.itemconfig('rect'+str(minutes_num), fill='blue')
             else:
                 canvas.itemconfig('rect'+str(minutes_num), fill='red')
+        # 価格の表示
+        canvas.itemconfig('value',text=data['約定値'])
+        canvas.coords('value',fx+40,fy)
+        # チャートが上に激突しないようにする処理
+        if fy < 20:
+            defy += 10
+            recsy += 10
+            for i in range(minutes_num):
+                canvas.move('line'+str(i), 0, 10)
+                canvas.move('rect'+str(i), 0, 10)
         print(data['時刻'])
         # print(gap)
 
 
 def main():
-    canvas.create_line(15, 200, 15, 200, tag='line0')
-    canvas.create_rectangle(10, 200, 20, 200, fill='red', tag='rect0')
 
     start_button = tkinter.Button(
         root,
