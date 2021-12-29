@@ -4,6 +4,8 @@ import threading
 import pandas as pd
 from datetime import datetime, timedelta
 
+# todo：倍率変更、範囲を超えた時の位置変更、出来高都下の表示、昼のデータをのぞく処理、2%の線をつける
+
 root = tkinter.Tk()
 root.title(u"TkinterのCanvasを使ってみる")
 root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
@@ -40,7 +42,7 @@ def start_button_click(event):
 
 
 def update_canvas():
-    fname = '9212_20211228_1500.csv'
+    fname = '4418_20211229_1130.csv'
     input_fname = 'data/'+fname
     row_df = pd.read_csv(input_fname, header=0, index_col=0,
                          encoding='cp932').iloc[::-1]

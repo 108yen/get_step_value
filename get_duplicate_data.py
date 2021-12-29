@@ -14,7 +14,7 @@ from remove_duplicate_data import remove_duplicate
 CODE_LIST = ['6554', '4412', '7133', '4417',
              '4418', '9257', '6524', '2585',
              '9254', '4125', '9212', '9211',
-             '4260', '2158']
+             '4260', '2158', '4261']
 
 
 def read_xlwings():
