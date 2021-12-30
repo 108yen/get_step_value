@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from plot_chart import UpdateCanvas
 
-# todo：倍率変更、範囲を超えた時の位置変更、スレッドをクラスで書き出す、歩値を出す
+# todo：倍率変更、範囲を超えた時の位置変更、左にずらす処理、歩値を出す（500万以上は強調）、過去のちゃーとの描画
 
 root = tkinter.Tk()
 root.title(u"GEI")

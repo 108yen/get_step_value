@@ -53,7 +53,7 @@ class UpdateCanvas(threading.Thread):
         buy_dir = True  # 買いか売りか 初めは本当は前日と比較する必要あり
         split5m = datetime.strptime("09:05:00", '%H:%M:%S')
         ini_time = datetime.strptime(row_df[:1]['時刻'].values[0], '%H:%M:%S').time()
-        while ini_time > split5m.time():
+        while ini_time >= split5m.time():
             split5m = split5m+timedelta(minutes=5)
 
         self.canvas.create_line(15, 450, 15, 450, width=5,
