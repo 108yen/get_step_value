@@ -4,7 +4,7 @@ import threading
 import pandas as pd
 from datetime import datetime, timedelta
 
-# todo：倍率変更、範囲を超えた時の位置変更、スレッドをクラスで書き出す
+# todo：倍率変更、範囲を超えた時の位置変更、スレッドをクラスで書き出す、歩値を出す
 
 root = tkinter.Tk()
 root.title(u"GEI")
@@ -192,10 +192,10 @@ def update_canvas():
 
 
 def main():
-
     start_button = tkinter.Button(
         root,
         text="スタート",
+        highlightbackground='black',
         fg='black',
     )
     start_button.pack()
