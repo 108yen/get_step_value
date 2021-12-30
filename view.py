@@ -10,8 +10,9 @@ root = tkinter.Tk()
 root.title(u"GEI")
 root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
 
-CODE='9212'
-DATE='20211230'
+CODE = '9212'
+DATE = '20211230'
+CANDLE_WIDTH = 4
 
 # キャンバスエリア
 canvas = tkinter.Canvas(root, width=800, height=450)
@@ -32,14 +33,14 @@ def update_canvas():
     fname = CODE+'_'+DATE+'_1130.csv'
     input_fname = 'data/'+fname
     am_data = pd.read_csv(input_fname, header=0, index_col=0,
-                         encoding='cp932').iloc[::-1]
+                          encoding='cp932').iloc[::-1]
     # 午後ぶん
     fname = CODE+'_'+DATE+'_1500.csv'
     input_fname = 'data/'+fname
     pm_data = pd.read_csv(input_fname, header=0, index_col=0,
-                         encoding='cp932').iloc[::-1]
+                          encoding='cp932').iloc[::-1]
     pm_data = pm_data[pm_data['時刻'] > "11:30:00"]
-    row_df=pd.concat([am_data,pm_data])
+    row_df = pd.concat([am_data, pm_data])
     ini_val = int(row_df[:1]['約定値'].values[0])
     defy = 200  # y軸の基準の位置
     recsy = 200  # その足のスタートの位置
@@ -70,8 +71,10 @@ def update_canvas():
     canvas.create_line(0, defy, canvas.winfo_width(),
                        defy, width=1, fill='#ffa07a', tag='four_per')
     # ローソク足
-    canvas.create_line(13, defy, 13, defy, tag='line0')
-    canvas.create_rectangle(10, defy, 16, defy, fill='red', tag='rect0')
+    canvas.create_line(10+CANDLE_WIDTH//2, defy, 10 +
+                       CANDLE_WIDTH//2, defy, tag='line0')
+    canvas.create_rectangle(10, defy, 10+CANDLE_WIDTH,
+                            defy, fill='red', tag='rect0')
     # 価格表示
     canvas.create_text(60, defy, text='', tag='value')
 
@@ -79,11 +82,11 @@ def update_canvas():
         time.sleep(0.01)
         contract_price = int(data['約定値'])
         gap = contract_price-ini_val
-        sx = 10 + 9*minutes_num
+        sx = 10 + (3+CANDLE_WIDTH)*minutes_num
         sy = recsy
-        fx = sx+6
+        fx = sx+CANDLE_WIDTH
         fy = defy-gap
-        linex = sx+3
+        linex = sx+CANDLE_WIDTH//2
         # 2%と4%の線の処理
         two_per_y = int(defy-(contract_price*1.02-ini_val))
         four_per_y = int(defy-(contract_price*1.04-ini_val))
@@ -109,11 +112,11 @@ def update_canvas():
             recsy = defy-gap
             max = gap
             min = gap
-            sx = 10 + 9*minutes_num
+            sx = 10 + (3+CANDLE_WIDTH)*minutes_num
             sy = recsy
-            fx = sx+6
+            fx = sx+CANDLE_WIDTH
             fy = defy-gap
-            linex = sx+3
+            linex = sx+CANDLE_WIDTH//2
             # 出来高表示処理
             if buy_dir:
                 buy_volume = int(data['出来高'])
