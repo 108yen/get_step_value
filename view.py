@@ -4,7 +4,7 @@ import threading
 import pandas as pd
 from datetime import datetime, timedelta
 
-# todo：倍率変更、範囲を超えた時の位置変更、昼のデータをのぞく処理、2%の線をつける、スレッドをクラスで書き出す
+# todo：倍率変更、範囲を超えた時の位置変更、スレッドをクラスで書き出す
 
 root = tkinter.Tk()
 root.title(u"GEI")
@@ -70,8 +70,8 @@ def update_canvas():
     canvas.create_line(0, defy, canvas.winfo_width(),
                        defy, width=1, fill='#ffa07a', tag='four_per')
     # ローソク足
-    canvas.create_line(15, defy, 15, defy, tag='line0')
-    canvas.create_rectangle(10, defy, 20, defy, fill='red', tag='rect0')
+    canvas.create_line(13, defy, 13, defy, tag='line0')
+    canvas.create_rectangle(10, defy, 16, defy, fill='red', tag='rect0')
     # 価格表示
     canvas.create_text(60, defy, text='', tag='value')
 
@@ -79,11 +79,11 @@ def update_canvas():
         time.sleep(0.01)
         contract_price = int(data['約定値'])
         gap = contract_price-ini_val
-        sx = 10 + 13*minutes_num
+        sx = 10 + 9*minutes_num
         sy = recsy
-        fx = sx+10
+        fx = sx+6
         fy = defy-gap
-        linex = sx+5
+        linex = sx+3
         # 2%と4%の線の処理
         two_per_y = int(defy-(contract_price*1.02-ini_val))
         four_per_y = int(defy-(contract_price*1.04-ini_val))
@@ -109,11 +109,11 @@ def update_canvas():
             recsy = defy-gap
             max = gap
             min = gap
-            sx = 10 + 13*minutes_num
+            sx = 10 + 9*minutes_num
             sy = recsy
-            fx = sx+10
+            fx = sx+6
             fy = defy-gap
-            linex = sx+5
+            linex = sx+3
             # 出来高表示処理
             if buy_dir:
                 buy_volume = int(data['出来高'])
@@ -129,6 +129,7 @@ def update_canvas():
                                tag='buy_volume'+str(minutes_num))
             canvas.create_line(linex, sell_sy, linex, sell_fy, width=5, fill=sell_col,
                                tag='sell_volume'+str(minutes_num))
+            # ローソク足
             canvas.create_line(linex, defy-max, linex,
                                defy - min, tag='line'+str(minutes_num))
             canvas.create_rectangle(
@@ -177,7 +178,7 @@ def update_canvas():
         canvas.itemconfig('value', text=data['約定値'])
         canvas.coords('value', fx+40, fy)
         # チャートが上に激突しないようにする処理
-        if fy < 20:
+        if four_per_y < 20:
             defy += 10
             recsy += 10
             for i in range(minutes_num):
