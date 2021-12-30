@@ -10,6 +10,9 @@ root = tkinter.Tk()
 root.title(u"GEI")
 root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
 
+CODE='9212'
+DATE='20211230'
+
 # キャンバスエリア
 canvas = tkinter.Canvas(root, width=800, height=450)
 
@@ -25,10 +28,18 @@ def start_button_click(event):
 
 
 def update_canvas():
-    fname = '9212_20211230_1130.csv'
+    # 午前ぶん
+    fname = CODE+'_'+DATE+'_1130.csv'
     input_fname = 'data/'+fname
-    row_df = pd.read_csv(input_fname, header=0, index_col=0,
+    am_data = pd.read_csv(input_fname, header=0, index_col=0,
                          encoding='cp932').iloc[::-1]
+    # 午後ぶん
+    fname = CODE+'_'+DATE+'_1500.csv'
+    input_fname = 'data/'+fname
+    pm_data = pd.read_csv(input_fname, header=0, index_col=0,
+                         encoding='cp932').iloc[::-1]
+    pm_data = pm_data[pm_data['時刻'] > "11:30:00"]
+    row_df=pd.concat([am_data,pm_data])
     ini_val = int(row_df[:1]['約定値'].values[0])
     defy = 200  # y軸の基準の位置
     recsy = 200  # その足のスタートの位置
