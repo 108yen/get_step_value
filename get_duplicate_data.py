@@ -1,10 +1,6 @@
-import openpyxl
-import xlwings
 import time
 import start_ex
 import pandas as pd
-import xarray as xr
-import numpy as np
 from datetime import datetime
 import schedule
 from remove_duplicate_data import remove_duplicate
