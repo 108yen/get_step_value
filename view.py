@@ -102,7 +102,9 @@ def update_canvas():
             sell_volume += int(data['出来高'])
         # 5分足を分けるための処理
         if split5m.time() <= datetime.strptime(data['時刻'], '%H:%M:%S').time():
-            split5m = split5m+timedelta(minutes=5)
+            while datetime.strptime(data['時刻'], '%H:%M:%S').time() >= split5m.time():
+                split5m = split5m+timedelta(minutes=5)
+            print(split5m)
             minutes_num += 1
             recsy = defy-gap
             max = gap
@@ -181,7 +183,7 @@ def update_canvas():
             for i in range(minutes_num):
                 canvas.move('line'+str(i), 0, 10)
                 canvas.move('rect'+str(i), 0, 10)
-        print(data['時刻'])
+        # print(data['時刻'])
         # print(gap)
 
 
