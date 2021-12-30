@@ -25,7 +25,7 @@ def start_button_click(event):
 
 
 def update_canvas():
-    fname = '9212_20211230_1500.csv'
+    fname = '9212_20211230_1130.csv'
     input_fname = 'data/'+fname
     row_df = pd.read_csv(input_fname, header=0, index_col=0,
                          encoding='cp932').iloc[::-1]
@@ -52,10 +52,16 @@ def update_canvas():
                        fill=buy_col, tag='buy_volume0')
     canvas.create_line(15, 450, 15, 450, width=5,
                        fill=sell_col, tag='sell_volume0')
-    canvas.create_line(0,450-150,800,450-150)
-
+    canvas.create_line(0, 450-150, 800, 450-150)
+    # 2%と4%の線
+    canvas.create_line(0, defy, canvas.winfo_width(),
+                       defy, width=1, fill='#3cb371', tag='two_per')
+    canvas.create_line(0, defy, canvas.winfo_width(),
+                       defy, width=1, fill='#ffa07a', tag='four_per')
+    # ローソク足
     canvas.create_line(15, defy, 15, defy, tag='line0')
     canvas.create_rectangle(10, defy, 20, defy, fill='red', tag='rect0')
+    # 価格表示
     canvas.create_text(60, defy, text='', tag='value')
 
     for index, data in row_df.iterrows():
@@ -67,6 +73,12 @@ def update_canvas():
         fx = sx+10
         fy = defy-gap
         linex = sx+5
+        # 2%と4%の線の処理
+        two_per_y = int(defy-(contract_price*1.02-ini_val))
+        four_per_y = int(defy-(contract_price*1.04-ini_val))
+        canvas.coords('two_per', 10, two_per_y, 790, two_per_y)
+        canvas.coords('four_per', 10, four_per_y, 790, four_per_y)
+
         # 出来高表示の処理
         if pre_value < contract_price:
             buy_dir = True
@@ -133,7 +145,7 @@ def update_canvas():
                           linex, sell_sy, linex, sell_fy)
             # 出来高が長すぎる時の処理
             if sell_sy-buy_fy > 150:
-                vol_mag=int(vol_mag*1.1)
+                vol_mag = int(vol_mag*1.1)
                 for i in range(minutes_num):
                     sell_sx, sell_sy, sell_fx, sell_fy = canvas.coords(
                         'sell_volume'+str(i))
