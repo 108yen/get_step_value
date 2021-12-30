@@ -4,7 +4,7 @@ import threading
 import pandas as pd
 from datetime import datetime, timedelta
 
-# todo：倍率変更、範囲を超えた時の位置変更、出来高都下の表示、昼のデータをのぞく処理、2%の線をつける、スレッドをクラスで書き出す
+# todo：倍率変更、範囲を超えた時の位置変更、昼のデータをのぞく処理、2%の線をつける、スレッドをクラスで書き出す
 
 root = tkinter.Tk()
 root.title(u"GEI")
@@ -78,7 +78,7 @@ def update_canvas():
         else:
             sell_volume += int(data['出来高'])
         # 5分足を分けるための処理
-        if split5m.time() < datetime.strptime(data['時刻'], '%H:%M:%S').time():
+        if split5m.time() <= datetime.strptime(data['時刻'], '%H:%M:%S').time():
             split5m = split5m+timedelta(minutes=5)
             minutes_num += 1
             recsy = defy-gap
