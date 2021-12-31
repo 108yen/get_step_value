@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from plot_chart import UpdateCanvas
 import plot_past_chart
 
-# todo：倍率変更、範囲を超えた時の位置変更、左にずらす処理、歩値を出す（500万以上は強調）、過去のちゃーとの描画
+# todo：倍率変更、範囲を超えた時の位置変更、左にずらす処理（1.2日分くらい表示？）、歩値を出す（500万以上は強調）
 
 root = tkinter.Tk()
 root.title(u"GEI")

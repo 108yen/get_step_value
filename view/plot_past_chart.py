@@ -137,7 +137,7 @@ def plot(canvas, code, date):
         canvas.create_line(line_x, sell_vol_fy, line_x,
                            volume_fy, width=5, fill=buy_col, tag='sell_volume'+str(index))
 
-    return candle_rate, volume_rate, max_val, min_val, five_min_data.index-1
+    return candle_rate, volume_rate, max_val, min_val, len(five_min_data.index)-1
 
 
 def main():
