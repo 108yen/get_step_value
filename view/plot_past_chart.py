@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime, timedelta
 from tqdm import tqdm
+import tkinter
 
 # 前日とかのチャートをプロットするやつ
 
@@ -56,7 +57,7 @@ def split_five_min_data(code, date):
             min = value
         volume += int(data['出来高'])
     # 最後のデータを投入する
-    fin = row_df[:-1]['約定値'].values[0]
+    fin = row_df[-1:]['約定値'].values[0]
     five_min_data = five_min_data.append(
         pd.Series([split5m.strftime('%H:%M:%S'), first, fin, max, min, volume],
                   index=five_min_data.columns),
@@ -64,9 +65,48 @@ def split_five_min_data(code, date):
 
     return five_min_data
 
+# canvasにプロットする 800x450(300)
+
+
+def plot(canvas):
+    candle_width = 4
+    five_min_data = split_five_min_data('9212', '20211230')
+    # 高値と低値から倍率を決める
+    max_val = five_min_data['高値'].max()
+    min_val = five_min_data['低値'].min()
+    view_rate = 300/(max_val-min_val)
+    # 最初の足の始値と位置（これを基準に描画する）
+    ini_val = five_min_data[:1]['始値'].values[0]
+    defy = 300-int((ini_val-min_val)*view_rate)
+    print(ini_val)
+    for index, data in five_min_data.iterrows():
+        # ローソク足の計算
+        candle_sy = defy-int((data['始値']-ini_val)*view_rate)
+        candle_fy = candle_sy-int((data['終値']-data['始値'])*view_rate)
+        candle_sx=10+(candle_width+3)*index
+        candle_fx=candle_sx+candle_width
+        color = 'red' if data['終値'] >= data['始値'] else 'blue'
+        # ひげの計算
+        line_x=candle_sx+candle_width//2
+        line_sy = defy-int((data['低値']-ini_val)*view_rate)
+        line_fy = defy-int((data['高値']-ini_val)*view_rate)
+        # ヒゲ配置
+        canvas.create_line(line_x,line_sy,line_x,line_fy)
+        # ローソク足配置
+        canvas.create_rectangle(candle_sx, candle_sy, candle_fx, candle_fy, fill=color)
+    # print(five_min_data[-1:])
 
 def main():
-    print(split_five_min_data('9212', '20211230'))
+    root = tkinter.Tk()
+    root.title(u"GEI")
+    root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
+
+    # キャンバスエリア
+    canvas = tkinter.Canvas(root, width=800, height=450)
+    plot(canvas)
+
+    canvas.place(x=0, y=0)
+    root.mainloop()
 
 
 if __name__ == '__main__':

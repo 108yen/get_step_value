@@ -38,7 +38,7 @@ class UpdateCanvas(threading.Thread):
         pm_data = pm_data[pm_data['時刻'] > "11:30:00"]
         row_df = pd.concat([am_data, pm_data])
         ini_val = int(row_df[:1]['約定値'].values[0])
-        defy = 200  # y軸の基準の位置
+        defy = 200  # y軸の基準の位置 (初めの足の始まりの位置)  
         recsy = 200  # その足のスタートの位置
         max = 0
         min = 0
