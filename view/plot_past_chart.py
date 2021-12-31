@@ -74,26 +74,32 @@ def plot(canvas):
     # 高値と低値から倍率を決める
     max_val = five_min_data['高値'].max()
     min_val = five_min_data['低値'].min()
-    view_rate = 300/(max_val-min_val)
+    candle_rate = 300/(max_val-min_val)
     # 最初の足の始値と位置（これを基準に描画する）
     ini_val = five_min_data[:1]['始値'].values[0]
-    defy = 300-int((ini_val-min_val)*view_rate)
-    print(ini_val)
+    defy = 300-int((ini_val-min_val)*candle_rate)
+    # 出来高の倍率を決める
+    max_volume=five_min_data['出来高'].max()
+    volume_rate=150/max_volume
     for index, data in five_min_data.iterrows():
         # ローソク足の計算
-        candle_sy = defy-int((data['始値']-ini_val)*view_rate)
-        candle_fy = candle_sy-int((data['終値']-data['始値'])*view_rate)
+        candle_sy = defy-int((data['始値']-ini_val)*candle_rate)
+        candle_fy = candle_sy-int((data['終値']-data['始値'])*candle_rate)
         candle_sx=10+(candle_width+3)*index
         candle_fx=candle_sx+candle_width
         color = 'red' if data['終値'] >= data['始値'] else 'blue'
         # ひげの計算
         line_x=candle_sx+candle_width//2
-        line_sy = defy-int((data['低値']-ini_val)*view_rate)
-        line_fy = defy-int((data['高値']-ini_val)*view_rate)
+        line_sy = defy-int((data['低値']-ini_val)*candle_rate)
+        line_fy = defy-int((data['高値']-ini_val)*candle_rate)
+        # 出来高の計算
+        volume_fy=450-int(data['出来高']*volume_rate)
         # ヒゲ配置
         canvas.create_line(line_x,line_sy,line_x,line_fy)
         # ローソク足配置
         canvas.create_rectangle(candle_sx, candle_sy, candle_fx, candle_fy, fill=color)
+        # 出来高配置
+        canvas.create_line(line_x,450,line_x,volume_fy,width=5,fill=color)
     # print(five_min_data[-1:])
 
 def main():
