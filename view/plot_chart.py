@@ -12,12 +12,15 @@ date:   string
 candle_width    int
 """
 class UpdateCanvas(threading.Thread):
-    def __init__(self, canvas, code, date, candle_width):
+    def __init__(self, canvas, code, date, candle_width, candle_rate, volume_rate, max_val, min_val, minutes_num):
         super(UpdateCanvas, self).__init__()
         self.canvas = canvas
         self.code=code
         self.date=date
         self.candle_width=candle_width
+        self.candle_rate=candle_rate
+        self.volume_rate=volume_rate
+        self.minutes_num=minutes_num+1  # 次の足から描画するので
         self.stop_event = threading.Event()
         self.setDaemon(True)
 
@@ -42,11 +45,10 @@ class UpdateCanvas(threading.Thread):
         recsy = 200  # その足のスタートの位置
         max = 0
         min = 0
-        minutes_num = 0
+        self.minutes_num = 0
         # 出来高表示のための変数
         buy_col = '#cd5c5c'
         sell_col = '#4169e1'
-        vol_mag = 1200  # 倍率　これで割られる
         buy_volume = 0  # 出来高
         sell_volume = 0
         pre_value = 0  # 前の価格
@@ -81,7 +83,7 @@ class UpdateCanvas(threading.Thread):
             time.sleep(0.01)
             contract_price = int(data['約定値'])
             gap = contract_price-ini_val
-            sx = 10 + (3+self.candle_width)*minutes_num
+            sx = 10 + (3+self.candle_width)*self.minutes_num
             sy = recsy
             fx = sx+self.candle_width
             fy = defy-gap
@@ -107,11 +109,11 @@ class UpdateCanvas(threading.Thread):
                 while datetime.strptime(data['時刻'], '%H:%M:%S').time() >= split5m.time():
                     split5m = split5m+timedelta(minutes=5)
                 print(split5m)
-                minutes_num += 1
+                self.minutes_num += 1
                 recsy = defy-gap
                 max = gap
                 min = gap
-                sx = 10 + (3+self.candle_width)*minutes_num
+                sx = 10 + (3+self.candle_width)*self.minutes_num
                 sy = recsy
                 fx = sx+self.candle_width
                 fy = defy-gap
@@ -124,46 +126,46 @@ class UpdateCanvas(threading.Thread):
                     buy_volume = 0
                     sell_volume = int(data['出来高'])
                 sell_sy = 450
-                sell_fy = sell_sy-sell_volume//vol_mag
+                sell_fy = sell_sy-int(sell_volume*self.volume_rate)
                 buy_sy = sell_fy
-                buy_fy = buy_sy-buy_volume//vol_mag
+                buy_fy = buy_sy-int(buy_volume*self.volume_rate)
                 self.canvas.create_line(linex, buy_sy, linex, buy_fy, width=5, fill=buy_col,
-                                tag='buy_volume'+str(minutes_num))
+                                tag='buy_volume'+str(self.minutes_num))
                 self.canvas.create_line(linex, sell_sy, linex, sell_fy, width=5, fill=sell_col,
-                                tag='sell_volume'+str(minutes_num))
+                                tag='sell_volume'+str(self.minutes_num))
                 # ローソク足
                 self.canvas.create_line(linex, defy-max, linex,
-                                defy - min, tag='line'+str(minutes_num))
+                                defy - min, tag='line'+str(self.minutes_num))
                 self.canvas.create_rectangle(
-                    sx, sy, fx, fy, fill='red', tag='rect'+str(minutes_num))
+                    sx, sy, fx, fy, fill='red', tag='rect'+str(self.minutes_num))
             else:
                 # 足
-                self.canvas.coords('rect'+str(minutes_num), sx, sy, fx, fy)
+                self.canvas.coords('rect'+str(self.minutes_num), sx, sy, fx, fy)
                 if recsy < fy:
                     self.canvas.itemconfig(
-                        'rect'+str(minutes_num), fill='blue')
+                        'rect'+str(self.minutes_num), fill='blue')
                 else:
-                    self.canvas.itemconfig('rect'+str(minutes_num), fill='red')
+                    self.canvas.itemconfig('rect'+str(self.minutes_num), fill='red')
                 # ヒゲ
                 if gap > max:
                     max = gap
                 if gap < min:
                     min = gap
-                self.canvas.coords('line'+str(minutes_num), linex,
+                self.canvas.coords('line'+str(self.minutes_num), linex,
                             defy-max, linex, defy-min)
                 # 出来高
                 sell_sy = 450
-                sell_fy = sell_sy-sell_volume//vol_mag
+                sell_fy = sell_sy-int(sell_volume*self.volume_rate)
                 buy_sy = sell_fy
-                buy_fy = buy_sy-buy_volume//vol_mag
-                self.canvas.coords('buy_volume'+str(minutes_num),
+                buy_fy = buy_sy-int(buy_volume*self.volume_rate)
+                self.canvas.coords('buy_volume'+str(self.minutes_num),
                             linex, buy_sy, linex, buy_fy)
-                self.canvas.coords('sell_volume'+str(minutes_num),
+                self.canvas.coords('sell_volume'+str(self.minutes_num),
                             linex, sell_sy, linex, sell_fy)
                 # 出来高が長すぎる時の処理
                 if sell_sy-buy_fy > 150:
-                    vol_mag = int(vol_mag*1.1)
-                    for i in range(minutes_num):
+                    self.volume_rate = int(self.volume_rate/1.1)
+                    for i in range(self.minutes_num):
                         sell_sx, sell_sy, sell_fx, sell_fy = self.canvas.coords(
                             'sell_volume'+str(i))
                         buy_sx, buy_sy, buy_fx, buy_fy = self.canvas.coords(
@@ -184,7 +186,7 @@ class UpdateCanvas(threading.Thread):
             if four_per_y < 20:
                 defy += 10
                 recsy += 10
-                for i in range(minutes_num):
+                for i in range(self.minutes_num):
                     self.canvas.move('line'+str(i), 0, 10)
                     self.canvas.move('rect'+str(i), 0, 10)
             # print(data['時刻'])
