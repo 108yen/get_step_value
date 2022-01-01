@@ -12,7 +12,7 @@ root = tkinter.Tk()
 root.title(u"GEI")
 root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
 
-CODE = '9212'
+CODE = '6524'
 DATE = '20211230'
 PREDATE = '20211229'
 CANDLE_WIDTH = 4
