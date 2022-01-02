@@ -231,8 +231,7 @@ class UpdateCanvas(threading.Thread):
                     # 今のローソク足の処理
                     pre_defy=defy
                     defy = 300-int((ini_val-self.min_val)*self.candle_rate)
-                    recsy=300-int((\
-                        ((300-recsy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
+                    recsy=pos_correct(recsy,pre_candle_rate,self.candle_rate,pre_min_val,self.min_val)
                     # 過去のローソク足の処理
                     for i in range(self.minutes_num):
                         past_candle_sx, past_candle_sy, past_candle_fx, past_candle_fy = self.canvas.coords(
@@ -240,22 +239,23 @@ class UpdateCanvas(threading.Thread):
                         past_line_sx, past_line_sy, past_line_fx, past_line_fy = self.canvas.coords(
                             'line'+str(i))
                         # 前の価格差をだして再計算する
-                        past_candle_sy = 300-int(((
-                            (300-past_candle_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
-                        past_candle_fy = 300-int(((
-                            (300-past_candle_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
+                        past_candle_sy = pos_correct(past_candle_sy,pre_candle_rate,self.candle_rate,pre_min_val,self.min_val)
+                        past_candle_fy = pos_correct(
+                            past_candle_fy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                         self.canvas.coords('rect'+str(i), past_candle_sx,
                                            past_candle_sy, past_candle_fx, past_candle_fy)
-                        past_line_sy = 300-int(((
-                            (300-past_line_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
-                        past_line_fy = 300-int(((
-                            (300-past_line_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
+                        past_line_sy = pos_correct(
+                            past_line_sy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
+                        past_line_fy = pos_correct(
+                            past_line_fy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                         self.canvas.coords('line'+str(i), past_line_sx,
                                            past_line_sy, past_line_fx, past_line_fy)
             # 価格の表示
             self.canvas.itemconfig('value', text=data['約定値'])
             self.canvas.coords('value', candle_fx+40, candle_fy)
 
+def pos_correct(pre_pos,pre_candle_rate,candle_rate,pre_min_val,min_val):
+    return 300-int((((300-pre_pos)/pre_candle_rate+pre_min_val)-min_val)*candle_rate)
 
 def main():
     print()
