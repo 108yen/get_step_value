@@ -228,15 +228,11 @@ class UpdateCanvas(threading.Thread):
                         self.max_val = four_per+10
                     pre_candle_rate = self.candle_rate
                     self.candle_rate = 300/(self.max_val-self.min_val)
-                    print('candle_rate:'+str(self.candle_rate)+' max:'+str(self.max_val)+' min:'+str(self.min_val))
-                    print('contract:'+str(contract_price)+' four_per:'+str(four_per))
                     # 今のローソク足の処理
                     pre_defy=defy
                     defy = 300-int((ini_val-self.min_val)*self.candle_rate)
-                    recsy = defy-int((pre_defy-recsy) *
-                                (self.candle_rate/pre_candle_rate))
-                    # print('defy:'+str(defy)+' candle_sy:'+str(candle_sy)+' recsy:'+str(recsy))
-                    candle_sy = recsy
+                    recsy=300-int((\
+                        ((300-recsy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
                     # 過去のローソク足の処理
                     for i in range(self.minutes_num):
                         past_candle_sx, past_candle_sy, past_candle_fx, past_candle_fy = self.canvas.coords(
@@ -244,16 +240,16 @@ class UpdateCanvas(threading.Thread):
                         past_line_sx, past_line_sy, past_line_fx, past_line_fy = self.canvas.coords(
                             'line'+str(i))
                         # 前の価格差をだして再計算する
-                        past_candle_sy = 300-int((
-                            (300-past_candle_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
-                        past_candle_fy = 300-int((
-                            (300-past_candle_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
+                        past_candle_sy = 300-int(((
+                            (300-past_candle_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
+                        past_candle_fy = 300-int(((
+                            (300-past_candle_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
                         self.canvas.coords('rect'+str(i), past_candle_sx,
                                            past_candle_sy, past_candle_fx, past_candle_fy)
-                        past_line_sy = 300-int((
-                            (300-past_line_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
-                        past_line_fy = 300-int((
-                            (300-past_line_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
+                        past_line_sy = 300-int(((
+                            (300-past_line_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
+                        past_line_fy = 300-int(((
+                            (300-past_line_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate)
                         self.canvas.coords('line'+str(i), past_line_sx,
                                            past_line_sy, past_line_fx, past_line_fy)
             # 価格の表示
