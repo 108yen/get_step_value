@@ -120,6 +120,7 @@ class UpdateCanvas(threading.Thread):
             # 2%と4%の線の処理
             two_per_y = int(defy-(contract_price*1.02-ini_val)
                             * self.candle_rate)
+            four_per=int(contract_price*1.04)
             four_per_y = int(
                 defy-(contract_price*1.04-ini_val)*self.candle_rate)
             self.canvas.coords('two_per', 10, two_per_y, 790, two_per_y)
@@ -219,18 +220,21 @@ class UpdateCanvas(threading.Thread):
                         self.canvas.coords('buy_volume'+str(i), buy_sx,
                                            buy_sy, buy_fx, buy_fy)
                 # ローソク足が範囲外の時の処理
-                if self.min_val > contract_price or four_per_y < self.max_val:
+                if self.min_val > contract_price or four_per+10 > self.max_val:
+                    pre_min_val=self.min_val
                     if self.min_val > contract_price:
                         self.min_val = contract_price
-                    elif self.max_val < four_per_y:
-                        self.max_val = four_per_y
+                    elif self.max_val < four_per+10:
+                        self.max_val = four_per+10
                     pre_candle_rate = self.candle_rate
                     self.candle_rate = 300/(self.max_val-self.min_val)
+                    print('candle_rate:'+str(self.candle_rate)+' max:'+str(self.max_val)+' min:'+str(self.min_val))
+                    print('contract:'+str(contract_price)+' four_per:'+str(four_per))
                     # 今のローソク足の処理
-                    pre_pos_gap=defy-candle_sy
-                    defy = int(defy*self.candle_rate/pre_candle_rate)
-                    recsy = int(recsy *
-                                self.candle_rate/pre_candle_rate)
+                    pre_defy=defy
+                    defy = 300-int((ini_val-self.min_val)*self.candle_rate)
+                    recsy = defy-int((pre_defy-recsy) *
+                                (self.candle_rate/pre_candle_rate))
                     # print('defy:'+str(defy)+' candle_sy:'+str(candle_sy)+' recsy:'+str(recsy))
                     candle_sy = recsy
                     # 過去のローソク足の処理
@@ -239,30 +243,22 @@ class UpdateCanvas(threading.Thread):
                             'rect'+str(i))
                         past_line_sx, past_line_sy, past_line_fx, past_line_fy = self.canvas.coords(
                             'line'+str(i))
-                        past_candle_sy = int(
-                            past_candle_sy*(self.candle_rate/pre_candle_rate))
-                        past_candle_fy = int(
-                            past_candle_fy*(self.candle_rate/pre_candle_rate))
+                        # 前の価格差をだして再計算する
+                        past_candle_sy = 300-int((
+                            (300-past_candle_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
+                        past_candle_fy = 300-int((
+                            (300-past_candle_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
                         self.canvas.coords('rect'+str(i), past_candle_sx,
                                            past_candle_sy, past_candle_fx, past_candle_fy)
-                        past_line_sy = int(
-                            past_line_sy*(self.candle_rate/pre_candle_rate))
-                        past_line_fy = int(
-                            past_line_fy*(self.candle_rate/pre_candle_rate))
+                        past_line_sy = 300-int((
+                            (300-past_line_sy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
+                        past_line_fy = 300-int((
+                            (300-past_line_fy)/pre_candle_rate+pre_min_val)-self.min_val)*self.candle_rate
                         self.canvas.coords('line'+str(i), past_line_sx,
                                            past_line_sy, past_line_fx, past_line_fy)
             # 価格の表示
             self.canvas.itemconfig('value', text=data['約定値'])
             self.canvas.coords('value', candle_fx+40, candle_fy)
-            # チャートが上に激突しないようにする処理
-            if four_per_y < 20:
-                defy += 10
-                recsy += 10
-                for i in range(self.minutes_num):
-                    self.canvas.move('line'+str(i), 0, 10)
-                    self.canvas.move('rect'+str(i), 0, 10)
-            # print(data['時刻'])
-            # print(gap)
 
 
 def main():
