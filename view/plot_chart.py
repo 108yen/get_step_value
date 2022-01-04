@@ -60,12 +60,12 @@ class UpdateCanvas(threading.Thread):
                     'rect'+str(i))
                 line_sx, line_sy, line_fx, line_fy = self.canvas.coords(
                     'line'+str(i))
-                candle_sy = int(candle_sy*(self.candle_rate/pre_candle_rate))
-                candle_fy = int(candle_fy*(self.candle_rate/pre_candle_rate))
+                candle_sy = candle_sy*(self.candle_rate/pre_candle_rate)
+                candle_fy = candle_fy*(self.candle_rate/pre_candle_rate)
                 self.canvas.coords('rect'+str(i), candle_sx,
                                    candle_sy, candle_fx, candle_fy)
-                line_sy = int(line_sy*(self.candle_rate/pre_candle_rate))
-                line_fy = int(line_fy*(self.candle_rate/pre_candle_rate))
+                line_sy = line_sy*(self.candle_rate/pre_candle_rate)
+                line_fy = line_fy*(self.candle_rate/pre_candle_rate)
                 self.canvas.coords('line'+str(i), line_sx,
                                    line_sy, line_fx, line_fy)
         # y軸の基準の位置 (初めの足の始まりの位置)
@@ -115,14 +115,12 @@ class UpdateCanvas(threading.Thread):
             candle_sx = 10 + (3+self.candle_width)*self.minutes_num
             candle_sy = recsy
             candle_fx = candle_sx+self.candle_width
-            candle_fy = defy-int(gap*self.candle_rate)
+            candle_fy = defy-gap*self.candle_rate
             linex = candle_sx+self.candle_width//2
             # 2%と4%の線の処理
-            two_per_y = int(defy-(contract_price*1.02-ini_val)
-                            * self.candle_rate)
-            four_per=int(contract_price*1.04)
-            four_per_y = int(
-                defy-(contract_price*1.04-ini_val)*self.candle_rate)
+            two_per_y = defy-(contract_price*1.02-ini_val) * self.candle_rate
+            four_per = contract_price*1.04
+            four_per_y = defy-(contract_price*1.04-ini_val)*self.candle_rate
             self.canvas.coords('two_per', 10, two_per_y, 790, two_per_y)
             self.canvas.coords('four_per', 10, four_per_y, 790, four_per_y)
 
@@ -142,17 +140,17 @@ class UpdateCanvas(threading.Thread):
                     split5m = split5m+timedelta(minutes=5)
                 print(split5m)
                 self.minutes_num += 1
-                recsy = defy-int(gap*self.candle_rate)
+                recsy = defy-gap*self.candle_rate
                 # ローソク足の処理
                 candle_sx = 10 + (3+self.candle_width)*self.minutes_num
                 candle_sy = recsy
                 candle_fx = candle_sx+self.candle_width
-                candle_fy = defy-int(gap*self.candle_rate)
+                candle_fy = defy-gap*self.candle_rate
                 # ひげの処理
                 max = gap
                 min = gap
-                line_sy = defy-int(max*self.candle_rate)
-                line_fy = defy-int(min*self.candle_rate)
+                line_sy = defy-max*self.candle_rate
+                line_fy = defy-min*self.candle_rate
                 linex = candle_sx+self.candle_width//2
                 # 出来高表示処理
                 if buy_dir:
@@ -162,9 +160,9 @@ class UpdateCanvas(threading.Thread):
                     buy_volume = 0
                     sell_volume = int(data['出来高'])
                 sell_sy = 450
-                sell_fy = sell_sy-int(sell_volume*self.volume_rate)
+                sell_fy = sell_sy-sell_volume*self.volume_rate
                 buy_sy = sell_fy
-                buy_fy = buy_sy-int(buy_volume*self.volume_rate)
+                buy_fy = buy_sy-buy_volume*self.volume_rate
                 self.canvas.create_line(linex, buy_sy, linex, buy_fy, width=5, fill=buy_col,
                                         tag='buy_volume'+str(self.minutes_num))
                 self.canvas.create_line(linex, sell_sy, linex, sell_fy, width=5, fill=sell_col,
@@ -189,15 +187,15 @@ class UpdateCanvas(threading.Thread):
                     max = gap
                 if gap < min:
                     min = gap
-                line_sy = defy-int(max*self.candle_rate)
-                line_fy = defy-int(min*self.candle_rate)
+                line_sy = defy-max*self.candle_rate
+                line_fy = defy-min*self.candle_rate
                 self.canvas.coords('line'+str(self.minutes_num), linex,
                                    line_sy, linex, line_fy)
                 # 出来高
                 sell_sy = 450
-                sell_fy = sell_sy-int(sell_volume*self.volume_rate)
+                sell_fy = sell_sy-sell_volume*self.volume_rate
                 buy_sy = sell_fy
-                buy_fy = buy_sy-int(buy_volume*self.volume_rate)
+                buy_fy = buy_sy-buy_volume*self.volume_rate
                 self.canvas.coords('buy_volume'+str(self.minutes_num),
                                    linex, buy_sy, linex, buy_fy)
                 self.canvas.coords('sell_volume'+str(self.minutes_num),
@@ -221,7 +219,7 @@ class UpdateCanvas(threading.Thread):
                                            buy_sy, buy_fx, buy_fy)
                 # ローソク足が範囲外の時の処理
                 if self.min_val > contract_price or four_per+10 > self.max_val:
-                    pre_min_val=self.min_val
+                    pre_min_val = self.min_val
                     if self.min_val > contract_price:
                         self.min_val = contract_price
                     elif self.max_val < four_per+10:
@@ -229,9 +227,9 @@ class UpdateCanvas(threading.Thread):
                     pre_candle_rate = self.candle_rate
                     self.candle_rate = 300/(self.max_val-self.min_val)
                     # 今のローソク足の処理
-                    pre_defy=defy
-                    defy = 300-int((ini_val-self.min_val)*self.candle_rate)
-                    recsy=pos_correct(recsy,pre_candle_rate,self.candle_rate,pre_min_val,self.min_val)
+                    defy = 300-(ini_val-self.min_val)*self.candle_rate
+                    recsy = pos_correct(
+                        recsy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                     # 過去のローソク足の処理
                     for i in range(self.minutes_num):
                         past_candle_sx, past_candle_sy, past_candle_fx, past_candle_fy = self.canvas.coords(
@@ -239,7 +237,8 @@ class UpdateCanvas(threading.Thread):
                         past_line_sx, past_line_sy, past_line_fx, past_line_fy = self.canvas.coords(
                             'line'+str(i))
                         # 前の価格差をだして再計算する
-                        past_candle_sy = pos_correct(past_candle_sy,pre_candle_rate,self.candle_rate,pre_min_val,self.min_val)
+                        past_candle_sy = pos_correct(
+                            past_candle_sy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                         past_candle_fy = pos_correct(
                             past_candle_fy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                         self.canvas.coords('rect'+str(i), past_candle_sx,
@@ -250,12 +249,15 @@ class UpdateCanvas(threading.Thread):
                             past_line_fy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                         self.canvas.coords('line'+str(i), past_line_sx,
                                            past_line_sy, past_line_fx, past_line_fy)
+
             # 価格の表示
             self.canvas.itemconfig('value', text=data['約定値'])
             self.canvas.coords('value', candle_fx+40, candle_fy)
 
-def pos_correct(pre_pos,pre_candle_rate,candle_rate,pre_min_val,min_val):
-    return 300-int((((300-pre_pos)/pre_candle_rate+pre_min_val)-min_val)*candle_rate)
+
+def pos_correct(pre_pos, pre_candle_rate, candle_rate, pre_min_val, min_val):
+    return 300-(((300-pre_pos)/pre_candle_rate+pre_min_val)-min_val)*candle_rate
+
 
 def main():
     print()
