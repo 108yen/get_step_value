@@ -111,18 +111,18 @@ def plot(canvas, code, date):
     volume_rate = 150/max_volume
     for index, data in five_min_data.iterrows():
         # ローソク足の計算
-        candle_sy = defy-int((data['始値']-ini_val)*candle_rate)
-        candle_fy = candle_sy-int((data['終値']-data['始値'])*candle_rate)
+        candle_sy = defy-(data['始値']-ini_val)*candle_rate
+        candle_fy = candle_sy-(data['終値']-data['始値'])*candle_rate
         candle_sx = 10+(candle_width+3)*index
         candle_fx = candle_sx+candle_width
         color = 'red' if data['終値'] >= data['始値'] else 'blue'
         # ひげの計算
         line_x = candle_sx+candle_width//2
-        line_sy = defy-int((data['低値']-ini_val)*candle_rate)
-        line_fy = defy-int((data['高値']-ini_val)*candle_rate)
+        line_sy = defy-(data['低値']-ini_val)*candle_rate
+        line_fy = defy-(data['高値']-ini_val)*candle_rate
         # 出来高の計算
-        volume_fy = 450-int(data['出来高']*volume_rate)
-        sell_vol_fy = 450-int(data['売り出来高']*volume_rate)
+        volume_fy = 450-data['出来高']*volume_rate
+        sell_vol_fy = 450-data['売り出来高']*volume_rate
         # ヒゲ配置
         canvas.create_line(line_x, line_sy, line_x,
                            line_fy, tag='line'+str(index))
