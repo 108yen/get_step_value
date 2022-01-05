@@ -7,10 +7,12 @@ from remove_duplicate_data import remove_duplicate
 
 # todo:非同期にする
 
-CODE_LIST = ['6554', '4412', '7133', '4417',
-             '4418', '9257', '6524', '2585',
-             '9254', '4125', '9212', '9211',
-             '4260', '2158', '4261']
+CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
+             '7133', '7383', '7254',
+             '6554', '6524', '6522',
+             '5759',
+             '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
+             '2585', '2484', '2427', '2158']
 
 
 def read_xlwings():
@@ -48,9 +50,10 @@ def get_step_value(sheet):
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
     # 場中動く処理
-    while start_am < datetime.today().time() < fin_am or\
-            start_pm < datetime.today().time() < fin_pm:
-        time.sleep(0.3)
+    while start_am < datetime.today().time() < fin_pm:
+        # while start_am < datetime.today().time() < fin_am or\
+        #         start_pm < datetime.today().time() < fin_pm:
+        time.sleep(0.1)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
             # df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[
@@ -65,7 +68,8 @@ def get_step_value(sheet):
     # 保存
     for code in CODE_LIST:
         df_list[code] = df_list[code].reset_index(drop=True)
-        fname = 'data/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
+        fname = 'data/'+datetime.today().strftime('%Y%m%d')+'/'+code+'.csv'
+        # fname = 'data/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
         df_list[code].to_csv(fname, encoding='cp932')
     print("保存完了")
 
@@ -111,7 +115,7 @@ def test():
 
 def main():
     schedule.every().day.at("08:59").do(read_xlwings)
-    schedule.every().day.at("12:29").do(read_xlwings)
+    # schedule.every().day.at("12:29").do(read_xlwings)
     while True:
         schedule.run_pending()
         time.sleep(10)
