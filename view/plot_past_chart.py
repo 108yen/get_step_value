@@ -148,6 +148,7 @@ def plot(canvas, code, date):
         # VWAP配置
         canvas.create_line(vwap_sx, vwap_sy, vwap_fx, vwap_fy,
                            fill='#ff6347', tag='vwap'+str(index))
+        canvas.lower('vwap'+str(index))
         # ヒゲ配置
         canvas.create_line(line_x, line_sy, line_x,
                            line_fy, tag='line'+str(index))

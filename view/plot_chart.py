@@ -97,14 +97,14 @@ class UpdateCanvas(threading.Thread):
                                 defy, width=1, fill='#3cb371', tag='two_per')
         self.canvas.create_line(0, defy, self.canvas.winfo_width(),
                                 defy, width=1, fill='#ffa07a', tag='four_per')
+        # vwap(前日の終わりとつなげる)
+        self.canvas.create_line(vwap_sx, vwap_sy, vwap_fx, vwap_fy,
+                                fill='#ff6347', tag='vwap'+str(self.minutes_num))
         # ローソク足
         self.canvas.create_line(10+self.candle_width//2, defy, 10 +
                                 self.candle_width//2, defy, tag='line'+str(self.minutes_num))
         self.canvas.create_rectangle(10, defy, 10+self.candle_width,
                                      defy, fill='red', tag='rect'+str(self.minutes_num))
-        # vwap(前日の終わりとつなげる)
-        self.canvas.create_line(vwap_sx, vwap_sy, vwap_fx, vwap_fy,
-                                fill='#ff6347', tag='vwap'+str(self.minutes_num))
         # 価格表示
         self.canvas.create_text(60, defy, text='', tag='value')
 
@@ -177,7 +177,8 @@ class UpdateCanvas(threading.Thread):
                 line_fy = defy-min*self.candle_rate
                 linex = candle_sx+self.candle_width//2
                 # vwapの処理
-                vwap_sx=vwap_fx
+                vwap_sx = 10 + (3+self.candle_width) * \
+                    (self.minutes_num-1)+self.candle_width//2
                 vwap_sy=vwap_fy
                 vwap_fx=linex
                 vwap_fy = defy-(trading_price/sum_volume -
@@ -200,6 +201,7 @@ class UpdateCanvas(threading.Thread):
                 # vwap
                 self.canvas.create_line(
                     vwap_sx, vwap_sy, vwap_fx, vwap_fy, fill='#ff6347', tag='vwap'+str(self.minutes_num))
+                self.canvas.lower('vwap'+str(self.minutes_num))
                 # ローソク足
                 self.canvas.create_line(linex, line_sy, linex,
                                         line_fy, tag='line'+str(self.minutes_num))
@@ -265,6 +267,8 @@ class UpdateCanvas(threading.Thread):
                     defy = 300-(ini_val-self.min_val)*self.candle_rate
                     recsy = pos_correct(
                         recsy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
+                    # 今のVwapのスタート位置の処理
+                    vwap_sy = pos_correct(vwap_sy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                     # 過去のローソク足の処理
                     recal_past_chart(self.canvas, self.minutes_num, pre_candle_rate,
                                      self.candle_rate, pre_min_val, self.min_val)
