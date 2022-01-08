@@ -266,25 +266,20 @@ def pos_correct(pre_pos, pre_candle_rate, candle_rate, pre_min_val, min_val):
     return 300-(((300-pre_pos)/pre_candle_rate+pre_min_val)-min_val)*candle_rate
 
 # チャートの倍率が変更された際に過去チャートの倍率を変更する処理
+# canvas:tkinter.canvas
+# minutes_num:チャートの足数
+# pre_candle_rate:前の倍率
+# candle_rate:変更後の倍率
+# pre_min_val:前の最小値の値
+# min_val:今の最小値の値（pre_min_valと変わらない可能性もある）
 def recal_past_chart(canvas, minutes_num, pre_candle_rate, candle_rate, pre_min_val, min_val):
     for i in range(minutes_num):
-        past_candle_sx, past_candle_sy, past_candle_fx, past_candle_fy = canvas.coords(
-            'rect'+str(i))
-        past_line_sx, past_line_sy, past_line_fx, past_line_fy = canvas.coords(
-            'line'+str(i))
         # 前の価格差をだして再計算する
-        past_candle_sy = pos_correct(
-            past_candle_sy, pre_candle_rate, candle_rate, pre_min_val, min_val)
-        past_candle_fy = pos_correct(
-            past_candle_fy, pre_candle_rate, candle_rate, pre_min_val, min_val)
-        canvas.coords('rect'+str(i), past_candle_sx,
-                      past_candle_sy, past_candle_fx, past_candle_fy)
-        past_line_sy = pos_correct(
-            past_line_sy, pre_candle_rate, candle_rate, pre_min_val, min_val)
-        past_line_fy = pos_correct(
-            past_line_fy, pre_candle_rate, candle_rate, pre_min_val, min_val)
-        canvas.coords('line'+str(i), past_line_sx,
-                      past_line_sy, past_line_fx, past_line_fy)
+        for item in ['rect', 'line']:
+            sx, sy, fx, fy = canvas.coords(item+str(i))
+            sy = pos_correct(sy, pre_candle_rate, candle_rate, pre_min_val, min_val)
+            fy = pos_correct(fy, pre_candle_rate, candle_rate, pre_min_val, min_val)
+            canvas.coords(item+str(i), sx,sy, fx, fy)
 
 
 def main():
