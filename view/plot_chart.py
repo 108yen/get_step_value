@@ -107,6 +107,8 @@ class UpdateCanvas(threading.Thread):
                                      defy, fill='red', tag='rect'+str(self.minutes_num))
         # 価格表示
         self.canvas.create_text(60, defy, text='', tag='value')
+        # vwap乖離率表示
+        self.canvas.create_text(35,15,text='',tag='vwap_dev_rate',font=('',25))
 
         for index, data in row_df.iterrows():
             if self.stop_event.is_set():
@@ -276,6 +278,13 @@ class UpdateCanvas(threading.Thread):
             # 価格の表示
             self.canvas.itemconfig('value', text=data['約定値'])
             self.canvas.coords('value', candle_fx+40, candle_fy)
+            # vwap乖離率の表示
+            vwap_dev_rate = round(((contract_price-trading_price/sum_volume)/contract_price)*100,2)
+            vwap_dev_rate_col = '#808080'
+            if vwap_dev_rate<-4:
+                vwap_dev_rate_col = '#ff0000'
+            self.canvas.itemconfig('vwap_dev_rate', text=str(
+                vwap_dev_rate), fill=vwap_dev_rate_col)
 
 # recal_past_chatでつかう関数
 
