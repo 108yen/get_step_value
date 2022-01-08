@@ -49,6 +49,7 @@ class UpdateCanvas(threading.Thread):
         defy = 0
         # 範囲外だった場合倍率も変更する必要がある
         if self.min_val > ini_val or ini_val > self.max_val:
+            pre_min_val = self.min_val
             if self.min_val > ini_val:
                 self.min_val = ini_val
                 self.min_id = self.minutes_num
@@ -57,19 +58,8 @@ class UpdateCanvas(threading.Thread):
                 self.max_id = self.minutes_num
             pre_candle_rate = self.candle_rate
             self.candle_rate = 300/(self.max_val-self.min_val)
-            for i in range(self.minutes_num):
-                candle_sx, candle_sy, candle_fx, candle_fy = self.canvas.coords(
-                    'rect'+str(i))
-                line_sx, line_sy, line_fx, line_fy = self.canvas.coords(
-                    'line'+str(i))
-                candle_sy = candle_sy*(self.candle_rate/pre_candle_rate)
-                candle_fy = candle_fy*(self.candle_rate/pre_candle_rate)
-                self.canvas.coords('rect'+str(i), candle_sx,
-                                   candle_sy, candle_fx, candle_fy)
-                line_sy = line_sy*(self.candle_rate/pre_candle_rate)
-                line_fy = line_fy*(self.candle_rate/pre_candle_rate)
-                self.canvas.coords('line'+str(i), line_sx,
-                                   line_sy, line_fx, line_fy)
+            recal_past_chart(self.canvas, self.minutes_num, pre_candle_rate,
+                 self.candle_rate, pre_min_val, self.min_val)
         # y軸の基準の位置 (初めの足の始まりの位置)
         defy = 300-int((ini_val-self.min_val)*self.candle_rate)
         recsy = defy  # その足のスタートの位置(初めはdefy)
@@ -264,32 +254,37 @@ class UpdateCanvas(threading.Thread):
                     recsy = pos_correct(
                         recsy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
                     # 過去のローソク足の処理
-                    for i in range(self.minutes_num):
-                        past_candle_sx, past_candle_sy, past_candle_fx, past_candle_fy = self.canvas.coords(
-                            'rect'+str(i))
-                        past_line_sx, past_line_sy, past_line_fx, past_line_fy = self.canvas.coords(
-                            'line'+str(i))
-                        # 前の価格差をだして再計算する
-                        past_candle_sy = pos_correct(
-                            past_candle_sy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
-                        past_candle_fy = pos_correct(
-                            past_candle_fy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
-                        self.canvas.coords('rect'+str(i), past_candle_sx,
-                                           past_candle_sy, past_candle_fx, past_candle_fy)
-                        past_line_sy = pos_correct(
-                            past_line_sy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
-                        past_line_fy = pos_correct(
-                            past_line_fy, pre_candle_rate, self.candle_rate, pre_min_val, self.min_val)
-                        self.canvas.coords('line'+str(i), past_line_sx,
-                                           past_line_sy, past_line_fx, past_line_fy)
+                    recal_past_chart(self.canvas, self.minutes_num, pre_candle_rate,
+                         self.candle_rate, pre_min_val, self.min_val)
 
             # 価格の表示
             self.canvas.itemconfig('value', text=data['約定値'])
             self.canvas.coords('value', candle_fx+40, candle_fy)
 
-
+# recal_past_chatでつかう関数
 def pos_correct(pre_pos, pre_candle_rate, candle_rate, pre_min_val, min_val):
     return 300-(((300-pre_pos)/pre_candle_rate+pre_min_val)-min_val)*candle_rate
+
+# チャートの倍率が変更された際に過去チャートの倍率を変更する処理
+def recal_past_chart(canvas, minutes_num, pre_candle_rate, candle_rate, pre_min_val, min_val):
+    for i in range(minutes_num):
+        past_candle_sx, past_candle_sy, past_candle_fx, past_candle_fy = canvas.coords(
+            'rect'+str(i))
+        past_line_sx, past_line_sy, past_line_fx, past_line_fy = canvas.coords(
+            'line'+str(i))
+        # 前の価格差をだして再計算する
+        past_candle_sy = pos_correct(
+            past_candle_sy, pre_candle_rate, candle_rate, pre_min_val, min_val)
+        past_candle_fy = pos_correct(
+            past_candle_fy, pre_candle_rate, candle_rate, pre_min_val, min_val)
+        canvas.coords('rect'+str(i), past_candle_sx,
+                      past_candle_sy, past_candle_fx, past_candle_fy)
+        past_line_sy = pos_correct(
+            past_line_sy, pre_candle_rate, candle_rate, pre_min_val, min_val)
+        past_line_fy = pos_correct(
+            past_line_fy, pre_candle_rate, candle_rate, pre_min_val, min_val)
+        canvas.coords('line'+str(i), past_line_sx,
+                      past_line_sy, past_line_fx, past_line_fy)
 
 
 def main():
