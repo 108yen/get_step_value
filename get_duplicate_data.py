@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import schedule
 from remove_duplicate_data import remove_duplicate
+import os
 
 # todo:非同期にする
 
@@ -68,7 +69,9 @@ def get_step_value(sheet):
     # 保存
     for code in CODE_LIST:
         df_list[code] = df_list[code].reset_index(drop=True)
-        fname = 'data/'+datetime.today().strftime('%Y%m%d')+'/'+code+'.csv'
+        new_dir_path = 'data/'+datetime.today().strftime('%Y%m%d')
+        os.makedirs(new_dir_path, exist_ok=True)
+        fname = new_dir_path+'/'+code+'.csv'
         # fname = 'data/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
         df_list[code].to_csv(fname, encoding='cp932')
     print("保存完了")

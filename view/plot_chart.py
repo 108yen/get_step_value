@@ -90,7 +90,6 @@ class UpdateCanvas(threading.Thread):
                                 fill=buy_col, tag='buy_volume'+str(self.minutes_num))
         self.canvas.create_line(15, 450, 15, 450, width=5,
                                 fill=sell_col, tag='sell_volume'+str(self.minutes_num))
-        self.canvas.create_line(0, 450-150, 800, 450-150)
         # 2%と4%の線
         self.canvas.create_line(0, defy, self.canvas.winfo_width(),
                                 defy, width=1, fill='#3cb371', tag='two_per')

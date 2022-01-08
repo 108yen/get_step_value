@@ -10,6 +10,7 @@ import plot_past_chart
 
 root = tkinter.Tk()
 root.title(u"GEI")
+root.configure(bg='white')
 root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
 
 CODE = '6524'
@@ -18,7 +19,7 @@ PREDATE = '20211229'
 CANDLE_WIDTH = 4
 
 # キャンバスエリア
-canvas = tkinter.Canvas(root, width=800, height=450)
+canvas = tkinter.Canvas(root, width=800, height=450, bg='white')
 candle_rate, volume_rate, max_val, min_val, index = \
     plot_past_chart.plot(canvas, CODE, PREDATE)
 # キャンバスを動かすやつ

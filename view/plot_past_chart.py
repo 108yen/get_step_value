@@ -96,6 +96,7 @@ min_val:    その日の低値
 five_min_data.index-1:  データ数(0からのカウントなので-1)
 """
 
+
 def plot(canvas, code, date):
     candle_width = 4
     five_min_data = split_five_min_data(code, date)
@@ -109,6 +110,8 @@ def plot(canvas, code, date):
     # 出来高の倍率を決める
     max_volume = five_min_data['出来高'].max()
     volume_rate = 150/max_volume
+    # 出来高とチャートの分離線
+    canvas.create_line(0, 450-150, 800, 450-150, tag='split')
     for index, data in five_min_data.iterrows():
         # ローソク足の計算
         candle_sy = defy-(data['始値']-ini_val)*candle_rate
