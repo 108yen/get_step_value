@@ -14,7 +14,7 @@ candle_width    int
 
 
 class UpdateCanvas(threading.Thread):
-    def __init__(self, canvas, code, date, candle_width, candle_rate, volume_rate, max_val, min_val, minutes_num):
+    def __init__(self, canvas, code, date, candle_width, candle_rate, volume_rate, max_val, min_val, max_id, min_id, minutes_num):
         super(UpdateCanvas, self).__init__()
         self.canvas = canvas
         self.code = code
@@ -24,6 +24,8 @@ class UpdateCanvas(threading.Thread):
         self.volume_rate = volume_rate
         self.max_val = max_val
         self.min_val = min_val
+        self.max_id = max_id
+        self.min_id = min_id
         self.minutes_num = minutes_num+1  # 次の足から描画するので
         self.stop_event = threading.Event()
         self.setDaemon(True)
@@ -51,8 +53,10 @@ class UpdateCanvas(threading.Thread):
         if self.min_val > ini_val or ini_val > self.max_val:
             if self.min_val > ini_val:
                 self.min_val = ini_val
+                self.min_id=self.minutes_num
             elif self.max_val < ini_val:
                 self.max_val = ini_val
+                self.max_id=self.minutes_num
             pre_candle_rate = self.candle_rate
             self.candle_rate = 300/(self.max_val-self.min_val)
             for i in range(self.minutes_num):
@@ -137,8 +141,40 @@ class UpdateCanvas(threading.Thread):
             if split5m.time() <= datetime.strptime(data['時刻'], '%H:%M:%S').time():
                 while datetime.strptime(data['時刻'], '%H:%M:%S').time() >= split5m.time():
                     split5m = split5m+timedelta(minutes=5)
-                print(split5m)
+                print(str(self.minutes_num)+' '+split5m.strftime('%H:%M:%S'))
                 self.minutes_num += 1
+                if self.minutes_num >= 102:
+                    self.minutes_num -= 1
+                    # 102本以上の足を表示しようとした場合には最初の足を削除してほかの足をずらす
+                    self.canvas.delete('line0')
+                    self.canvas.delete('rect0')
+                    self.canvas.delete('sell_volume0')
+                    self.canvas.delete('buy_volume0')
+                    for i in range(self.minutes_num):
+                        # 名前変更
+                        self.canvas.itemconfig(
+                            'line'+str(i+1), tag='line'+str(i))
+                        self.canvas.dtag('line'+str(i), 'line'+str(i+1))
+                        self.canvas.itemconfig(
+                            'rect'+str(i+1), tag='rect'+str(i))
+                        self.canvas.dtag('rect'+str(i), 'rect'+str(i+1))
+                        self.canvas.itemconfig(
+                            'sell_volume'+str(i+1), tag='sell_volume'+str(i))
+                        self.canvas.dtag('sell_volume'+str(i),
+                                         'sell_volume'+str(i+1))
+                        self.canvas.itemconfig(
+                            'buy_volume'+str(i+1), tag='buy_volume'+str(i))
+                        self.canvas.dtag('buy_volume'+str(i),
+                                         'buy_volume'+str(i+1))
+                        # 位置変更
+                        self.canvas.move('line'+str(i),
+                                         -(3+self.candle_width), 0)
+                        self.canvas.move('rect'+str(i),
+                                         -(3+self.candle_width), 0)
+                        self.canvas.move('sell_volume'+str(i),
+                                         -(3+self.candle_width), 0)
+                        self.canvas.move('buy_volume'+str(i),
+                                         -(3+self.candle_width), 0)
                 recsy = defy-gap*self.candle_rate
                 # ローソク足の処理
                 candle_sx = 10 + (3+self.candle_width)*self.minutes_num

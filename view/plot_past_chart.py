@@ -102,7 +102,9 @@ def plot(canvas, code, date):
     five_min_data = split_five_min_data(code, date)
     # 高値と低値から倍率を決める
     max_val = five_min_data['高値'].max()
+    max_id=five_min_data['高値'].idxmax()
     min_val = five_min_data['低値'].min()
+    min_id = five_min_data['低値'].idmin()
     candle_rate = 300/(max_val-min_val)
     # 最初の足の始値と位置（これを基準に描画する）
     ini_val = five_min_data[:1]['始値'].values[0]
@@ -111,7 +113,8 @@ def plot(canvas, code, date):
     max_volume = five_min_data['出来高'].max()
     volume_rate = 150/max_volume
     # 出来高とチャートの分離線
-    canvas.create_line(0, 450-150, 800, 450-150, tag='split')
+    canvas.create_line(0, 450-150, 800, 450-150, tag='split0')
+    canvas.create_line(730, 0, 730, 450, tag='split1')
     for index, data in five_min_data.iterrows():
         # ローソク足の計算
         candle_sy = defy-(data['始値']-ini_val)*candle_rate
@@ -140,7 +143,7 @@ def plot(canvas, code, date):
         canvas.create_line(line_x, sell_vol_fy, line_x,
                            volume_fy, width=5, fill=buy_col, tag='sell_volume'+str(index))
 
-    return candle_rate, volume_rate, max_val, min_val, len(five_min_data.index)-1
+    return candle_rate, volume_rate, max_val, min_val,max_id,min_id, len(five_min_data.index)-1
 
 
 def main():

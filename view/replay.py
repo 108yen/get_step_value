@@ -11,7 +11,7 @@ import plot_past_chart
 root = tkinter.Tk()
 root.title(u"GEI")
 root.configure(bg='white')
-root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
+root.geometry("850x500")  # ウインドウサイズ（「幅x高さ」で指定）
 
 CODE = '6524'
 DATE = '20211230'
@@ -20,11 +20,11 @@ CANDLE_WIDTH = 4
 
 # キャンバスエリア
 canvas = tkinter.Canvas(root, width=800, height=450, bg='white')
-candle_rate, volume_rate, max_val, min_val, index = \
+candle_rate, volume_rate, max_val, min_val, max_id, min_id, index = \
     plot_past_chart.plot(canvas, CODE, PREDATE)
 # キャンバスを動かすやつ
 uc = UpdateCanvas(canvas, CODE, DATE, CANDLE_WIDTH,
-                  candle_rate, volume_rate, max_val, min_val, index)
+                  candle_rate, volume_rate, max_val, min_val, max_id, min_id, index)
 
 
 def stop_button_click(event):
