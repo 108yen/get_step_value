@@ -14,7 +14,7 @@ candle_width    int
 
 
 class UpdateCanvas(threading.Thread):
-    def __init__(self, canvas, code, date, candle_width, candle_rate, volume_rate, max_val, min_val, max_id, min_id, minutes_num):
+    def __init__(self, canvas, code, date, candle_width, candle_rate, volume_rate, max_val, min_val, minutes_num):
         super(UpdateCanvas, self).__init__()
         self.canvas = canvas
         self.code = code
@@ -24,8 +24,6 @@ class UpdateCanvas(threading.Thread):
         self.volume_rate = volume_rate
         self.max_val = max_val
         self.min_val = min_val
-        self.max_id = max_id
-        self.min_id = min_id
         self.minutes_num = minutes_num+1  # 次の足から描画するので
         self.stop_event = threading.Event()
         self.setDaemon(True)
@@ -53,10 +51,10 @@ class UpdateCanvas(threading.Thread):
         if self.min_val > ini_val or ini_val > self.max_val:
             if self.min_val > ini_val:
                 self.min_val = ini_val
-                self.min_id=self.minutes_num
+                self.min_id = self.minutes_num
             elif self.max_val < ini_val:
                 self.max_val = ini_val
-                self.max_id=self.minutes_num
+                self.max_id = self.minutes_num
             pre_candle_rate = self.candle_rate
             self.candle_rate = 300/(self.max_val-self.min_val)
             for i in range(self.minutes_num):

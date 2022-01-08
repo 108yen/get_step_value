@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from plot_chart import UpdateCanvas
 import plot_past_chart
 
-# todo：左にずらす処理（1.2日分くらい表示？）、歩値を出す（500万以上は強調）
+# todo：高値とか低値が狭まった時の処理、歩値を出す（500万以上は強調）
 
 root = tkinter.Tk()
 root.title(u"GEI")
@@ -20,11 +20,11 @@ CANDLE_WIDTH = 4
 
 # キャンバスエリア
 canvas = tkinter.Canvas(root, width=800, height=450, bg='white')
-candle_rate, volume_rate, max_val, min_val, max_id, min_id, index = \
+candle_rate, volume_rate, max_val, min_val, index = \
     plot_past_chart.plot(canvas, CODE, PREDATE)
 # キャンバスを動かすやつ
 uc = UpdateCanvas(canvas, CODE, DATE, CANDLE_WIDTH,
-                  candle_rate, volume_rate, max_val, min_val, max_id, min_id, index)
+                  candle_rate, volume_rate, max_val, min_val, index)
 
 
 def stop_button_click(event):
