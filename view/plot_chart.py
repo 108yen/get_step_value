@@ -147,7 +147,7 @@ class UpdateCanvas(threading.Thread):
             if split5m.time() <= datetime.strptime(data['時刻'], '%H:%M:%S').time():
                 while datetime.strptime(data['時刻'], '%H:%M:%S').time() >= split5m.time():
                     split5m = split5m+timedelta(minutes=5)
-                print(str(self.minutes_num)+' '+split5m.strftime('%H:%M:%S'))
+                print(split5m.strftime('%H:%M:%S'))
                 self.minutes_num += 1
                 if self.minutes_num >= 102:
                     self.minutes_num -= 1

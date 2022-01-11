@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 from plot_chart import UpdateCanvas
 import plot_past_chart
 
-# todo：高値とか低値が狭まった時の処理、歩値を出す（500万以上は強調）
+# todo：高値とか低値が狭まった時に倍率戻す処理
+# todo：歩値を出す（500万以上は強調）
+# todo：５分足のデータも別途保存したい
 
 root = tkinter.Tk()
 root.title(u"GEI")

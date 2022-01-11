@@ -2,11 +2,12 @@ import pandas as pd
 from datetime import datetime, timedelta
 from tqdm import tqdm
 import tkinter
+import os
 
 # 前日とかのチャートをプロットするやつ
 
 
-def split_five_min_data(code, date):
+def split_five_min_data(code: str, date: str):
     # 午前ぶん
     fname = code+'_'+date+'_1130.csv'
     input_fname = 'data/'+fname
@@ -19,6 +20,10 @@ def split_five_min_data(code, date):
                           encoding='cp932').iloc[::-1]
     pm_data = pm_data[pm_data['時刻'] > "11:30:00"]
     row_df = pd.concat([am_data, pm_data]).reset_index(drop=True)
+    # # 午前午後分かれてないパターン
+    # fname='data/20220107/'+code+'.csv'
+    # row_df = pd.read_csv(fname, header=0, index_col=0,
+    #                                            encoding='cp932').iloc[::-1]
     # 出力予定のデータ
     five_min_data = pd.DataFrame(
         columns=["時刻", "始値", "終値", "高値", "低値", "買い出来高", "売り出来高", "出来高", "VWAP"])
@@ -167,16 +172,27 @@ def plot(canvas, code, date):
 
 
 def main():
-    root = tkinter.Tk()
-    root.title(u"GEI")
-    root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
+    # root = tkinter.Tk()
+    # root.title(u"GEI")
+    # root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
 
-    # キャンバスエリア
-    canvas = tkinter.Canvas(root, width=800, height=450)
-    print(plot(canvas, '9212', '20211229'))
+    # # キャンバスエリア
+    # canvas = tkinter.Canvas(root, width=800, height=450)
+    # print(plot(canvas, '9212', '20211229'))
 
-    canvas.place(x=0, y=0)
-    root.mainloop()
+    # canvas.place(x=0, y=0)
+    # root.mainloop()
+    code_list = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
+                 '7133', '7383', '7254',
+                 '6554', '6524', '6522',
+                 '5759',
+                 '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
+                 '2585', '2484', '2427', '2158']
+    for code in code_list:
+        new_dir_path = 'data/20220107/5min'
+        os.makedirs(new_dir_path, exist_ok=True)
+        fname = new_dir_path+'/'+code+'.csv'
+        split_five_min_data(code, '20200107').to_csv(fname, encoding='cp932')
 
 
 if __name__ == '__main__':

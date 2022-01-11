@@ -42,7 +42,7 @@ def get_step_value(sheet):
     n = 0
     start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
     fin_am = datetime.strptime("11:30:30", '%H:%M:%S').time()
-    start_pm = datetime.strptime("12:29:00", '%H:%M:%S').time()
+    start_pm = datetime.strptime("12:20:00", '%H:%M:%S').time()
     fin_pm = datetime.strptime("15:00:30", '%H:%M:%S').time()
 
     # dataframeを銘柄分作成（結構頭悪い処理）
@@ -54,6 +54,9 @@ def get_step_value(sheet):
     while start_am < datetime.today().time() < fin_pm:
         # while start_am < datetime.today().time() < fin_am or\
         #         start_pm < datetime.today().time() < fin_pm:
+        # 昼休憩
+        if fin_am<datetime.today().time<start_pm:
+            time.sleep(3000)
         time.sleep(0.1)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
