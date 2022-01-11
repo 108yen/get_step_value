@@ -6,6 +6,8 @@ import schedule
 from remove_duplicate_data import remove_duplicate
 import os
 
+from view.plot_past_chart import split_five_min_data
+
 # todo:非同期にする
 
 CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
@@ -69,14 +71,29 @@ def get_step_value(sheet):
         if n % 1000 == 0:
             print("取得回数："+str(n))
 
-    # 保存
+    # 歩みね保存
+    today_str = datetime.today().strftime('%Y%m%d')
     for code in CODE_LIST:
         df_list[code] = df_list[code].reset_index(drop=True)
-        new_dir_path = 'data/'+datetime.today().strftime('%Y%m%d')
-        os.makedirs(new_dir_path, exist_ok=True)
+        new_dir_path = 'data/'+today_str
         fname = new_dir_path+'/'+code+'.csv'
         # fname = 'data/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
-        df_list[code].to_csv(fname, encoding='cp932')
+        try:
+            os.makedirs(new_dir_path, exist_ok=True)
+            df_list[code].to_csv(fname, encoding='cp932')
+        except (FileExistsError) as e:
+            print(code+e)
+    # 5分足データの保存
+    for code in CODE_LIST:
+        new_dir_path = 'data/'+today_str+'/5min'
+        os.makedirs(new_dir_path, exist_ok=True)
+        fname = new_dir_path+'/'+code+'.csv'
+        # わざわざファイル読んでるの効率悪い
+        try:
+            split_five_min_data(code, today_str).to_csv(fname, encoding='cp932')
+        except (FileNotFoundError,FileExistsError) as e:
+            print(code+e)
+
     print("保存完了")
 
     if datetime.today().time() >= fin_pm:
