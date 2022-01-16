@@ -15,6 +15,7 @@ CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
              '6554', '6524', '6522',
              '5759',
              '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
+             '3604',
              '2585', '2484', '2427', '2158']
 
 
@@ -57,8 +58,10 @@ def get_step_value(sheet):
         # while start_am < datetime.today().time() < fin_am or\
         #         start_pm < datetime.today().time() < fin_pm:
         # 昼休憩
-        if fin_am<datetime.today().time<start_pm:
+        if fin_am < datetime.today().time() < start_pm:
+            print('ヌーン')
             time.sleep(3000)
+            print('ぬーん終わり')
         time.sleep(0.1)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
@@ -90,8 +93,9 @@ def get_step_value(sheet):
         fname = new_dir_path+'/'+code+'.csv'
         # わざわざファイル読んでるの効率悪い
         try:
-            split_five_min_data(code, today_str).to_csv(fname, encoding='cp932')
-        except (FileNotFoundError,FileExistsError) as e:
+            split_five_min_data(code, today_str).to_csv(
+                fname, encoding='cp932')
+        except (FileNotFoundError, FileExistsError) as e:
             print(code+e)
 
     print("保存完了")

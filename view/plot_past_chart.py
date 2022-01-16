@@ -49,8 +49,8 @@ def split_five_min_data(code: str, date: str):
         value = int(data['約定値'])
         # 次の足に行くタイミング
         if split5m.time() <= datetime.strptime(data['時刻'], '%H:%M:%S').time():
-            # 今はもう次の足の始値
-            fin = row_df[index-2:index-1]['約定値'].values[0]
+            # ひとつ前の値が終値
+            fin = row_df[index-1:index]['約定値'].values[0]
             vwap = trading_price/sum_volume
             five_min_data = five_min_data.append(
                 pd.Series([split5m.strftime('%H:%M:%S'), first, fin, max, min, buy_vol, sell_vol, volume, vwap],
@@ -172,27 +172,28 @@ def plot(canvas, code, date):
 
 
 def main():
-    root = tkinter.Tk()
-    root.title(u"GEI")
-    root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
+    # root = tkinter.Tk()
+    # root.title(u"GEI")
+    # root.geometry("800x450")  # ウインドウサイズ（「幅x高さ」で指定）
 
-    # キャンバスエリア
-    canvas = tkinter.Canvas(root, width=800, height=450)
-    plot(canvas, '6524', '20220107')
+    # # キャンバスエリア
+    # canvas = tkinter.Canvas(root, width=800, height=450)
+    # plot(canvas, '6524', '20220107')
 
-    canvas.place(x=0, y=0)
-    root.mainloop()
-    # code_list = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
-    #              '7133', '7383', '7254',
-    #              '6554', '6524', '6522',
-    #              '5759',
-    #              '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
-    #              '2585', '2484', '2427', '2158']
-    # for code in code_list:
-    #     new_dir_path = 'data/20220107/5min'
-    #     os.makedirs(new_dir_path, exist_ok=True)
-    #     fname = new_dir_path+'/'+code+'.csv'
-    #     split_five_min_data(code, '20220111').to_csv(fname, encoding='cp932')
+    # canvas.place(x=0, y=0)
+    # root.mainloop()
+    code_list = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
+                 '7133', '7383', '7254',
+                 '6554', '6524', '6522',
+                 '5759',
+                 '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
+                 '2585', '2484', '2427', '2158']
+    new_dir_path = 'data/20220114/5min'
+    for code in code_list:
+        # print(code)
+        os.makedirs(new_dir_path, exist_ok=True)
+        fname = new_dir_path+'/'+code+'.csv'
+        split_five_min_data(code, '20220114').to_csv(fname, encoding='cp932')
 
 
 if __name__ == '__main__':
