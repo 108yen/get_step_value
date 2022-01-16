@@ -119,7 +119,7 @@ class UpdateCanvas(threading.Thread):
             if self.stop_event.is_set():
                 print('stop')
                 break
-            time.sleep(0.1)
+            time.sleep(0.01)
             contract_price = int(data['約定値'])
             # 歩みね表示の処理
             step_view = row_df[index-21 if index>=21 else 0:index]\
