@@ -6,7 +6,8 @@ import os
 
 # 前日とかのチャートをプロットするやつ
 
-
+# todo:出来高０でもレコードとしては格納すべき
+# todo:５分ずれているのでどこかで修正すべき
 def split_five_min_data(code: str, date: str):
     # # 午前ぶん
     # fname = code+'_'+date+'_1130.csv'
@@ -126,9 +127,6 @@ def plot(canvas, code, date):
     # VWAPの描画用
     pre_vwap_fy = defy
     pre_vwap_fx = 10+candle_width//2
-    # 出来高とチャートの分離線
-    canvas.create_line(0, 450-150, 800, 450-150, tag='split0')
-    canvas.create_line(730, 0, 730, 450, tag='split1')
     for index, data in five_min_data.iterrows():
         # vwapの計算
         vwap_sy = pre_vwap_fy
