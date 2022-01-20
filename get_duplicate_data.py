@@ -11,7 +11,7 @@ from view.plot_past_chart import split_five_min_data
 # todo:非同期にする
 
 CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
-             '7133', '7383', '7254',
+             '7133', '7383', '7370', '7254',
              '6554', '6524', '6522',
              '5759',
              '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
@@ -62,7 +62,7 @@ def get_step_value(sheet):
             print('ヌーン')
             time.sleep(3000)
             print('ぬーん終わり')
-        time.sleep(0.1)
+        # time.sleep(0.1)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
             # df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[

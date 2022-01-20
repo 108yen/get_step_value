@@ -162,9 +162,9 @@ def plot(canvas, code, date):
         buy_col = '#cd5c5c'
         sell_col = '#4169e1'
         canvas.create_line(line_x, 450, line_x,
-                           sell_vol_fy, width=5, fill=sell_col, tag='buy_volume'+str(index))
+                           sell_vol_fy, width=5, fill=sell_col, tag='sell_volume'+str(index))
         canvas.create_line(line_x, sell_vol_fy, line_x,
-                           volume_fy, width=5, fill=buy_col, tag='sell_volume'+str(index))
+                           volume_fy, width=5, fill=buy_col, tag='buy_volume'+str(index))
 
     return candle_rate, volume_rate, max_val, min_val, len(five_min_data.index)-1
 

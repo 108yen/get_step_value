@@ -51,9 +51,9 @@ def main():
     root.configure(bg='white')
     root.geometry("1000x500")  # ウインドウサイズ（「幅x高さ」で指定）
 
-    CODE = '6524'
-    DATE = '20220111'
-    PREDATE = '20220107'
+    CODE = '7370'
+    DATE = '20220120'
+    PREDATE = '20220119'
     CANDLE_WIDTH = 4
 
     # キャンバスエリア

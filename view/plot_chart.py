@@ -122,8 +122,16 @@ class UpdateCanvas(threading.Thread):
             time.sleep(0.01)
             contract_price = int(data['約定値'])
             # 歩みね表示の処理
-            step_view = row_df[index-21 if index>=21 else 0:index]\
-                .iloc[::-1].reset_index(drop=True)
+            step_view = row_df[index-20 if index>=20 else 0:index+1]\
+                .reset_index(drop=True)
+            if index<20:
+                first=True
+            else:
+                if row_df[index-20:index-19]['約定値'].values[0] < row_df[index-19:index-18]['約定値'].values[0]:
+                    first=True
+                elif row_df[index-20:index-19]['約定値'].values[0] < row_df[index-19:index-18]['約定値'].values[0]:
+                    first=False
+            step_view = step_view.iloc[::-1].reset_index(drop=True)
             for sv_index, sv_data in step_view.iterrows():
                 self.canvas.itemconfig(
                     'step_time'+str(sv_index), text=sv_data['時刻'])
@@ -251,27 +259,29 @@ class UpdateCanvas(threading.Thread):
                 sell_fy = sell_sy-sell_volume*self.volume_rate
                 buy_sy = sell_fy
                 buy_fy = buy_sy-buy_volume*self.volume_rate
-                self.canvas.coords('buy_volume'+str(self.minutes_num),
-                                   linex, buy_sy, linex, buy_fy)
-                self.canvas.coords('sell_volume'+str(self.minutes_num),
-                                   linex, sell_sy, linex, sell_fy)
                 # 出来高が長すぎる時の処理
                 if sell_sy-buy_fy > 150:
-                    self.volume_rate = int(self.volume_rate/1.1)
+                    self.volume_rate = self.volume_rate/1.1
                     for i in range(self.minutes_num):
-                        sell_sx, sell_sy, sell_fx, sell_fy = self.canvas.coords(
+                        sell_sx, p_sell_sy, sell_fx, p_sell_fy = self.canvas.coords(
                             'sell_volume'+str(i))
-                        buy_sx, buy_sy, buy_fx, buy_fy = self.canvas.coords(
+                        buy_sx, p_buy_sy, buy_fx, p_buy_fy = self.canvas.coords(
                             'buy_volume'+str(i))
-                        sell_ln = ((sell_sy-sell_fy)*10)//11
-                        buy_ln = ((buy_sy-buy_fy)*10)//11
-                        sell_fy = sell_sy-sell_ln
-                        buy_sy = sell_fy
-                        buy_fy = buy_sy-buy_ln
+                        sell_ln = ((p_sell_sy-p_sell_fy)*10)/11
+                        buy_ln = ((p_buy_sy-p_buy_fy)*10)/11
+                        p_sell_fy = p_sell_sy-sell_ln
+                        p_buy_sy = p_sell_fy
+                        p_buy_fy = p_buy_sy-buy_ln
                         self.canvas.coords('sell_volume'+str(i), sell_sx,
-                                           sell_sy, sell_fx, sell_fy)
+                                           p_sell_sy, sell_fx, p_sell_fy)
                         self.canvas.coords('buy_volume'+str(i), buy_sx,
-                                           buy_sy, buy_fx, buy_fy)
+                                           p_buy_sy, buy_fx, p_buy_fy)
+                else:
+                    self.canvas.coords('buy_volume'+str(self.minutes_num),
+                                    linex, buy_sy, linex, buy_fy)
+                    self.canvas.coords('sell_volume'+str(self.minutes_num),
+                                    linex, sell_sy, linex, sell_fy)
+                    
                 # ローソク足が範囲外の時の処理
                 if self.min_val > contract_price or four_per+10 > self.max_val:
                     pre_min_val = self.min_val
