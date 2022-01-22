@@ -33,9 +33,9 @@ def canvas_layout(canvas):
     canvas.create_line(853, 0, 853, 450, fill='#c0c0c0', tag='split3')
     canvas.create_line(903, 0, 903, 450, fill='#c0c0c0', tag='split4')
     canvas.create_line(953, 0, 953, 450, fill='#c0c0c0', tag='split5')
-    canvas.create_rectangle(953, 2, 973, 450, tag='progress_bar_outline',
+    canvas.create_rectangle(953, 2, 968, 450, tag='progress_bar_outline',
                             outline='#c0c0c0')
-    canvas.create_rectangle(953, 450, 973, 450, tag='progress_bar',
+    canvas.create_rectangle(953, 450, 968, 450, tag='progress_bar',
                             outline='#c0c0c0', fill='#c0c0c0')
     canvas.create_line(800, 30, 953, 30, tag='step_vsplit0')
     for i in range(1, (450-30)//20):  # 21個
