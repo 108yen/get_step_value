@@ -30,8 +30,8 @@ def canvas_layout(canvas):
     canvas.create_text(830, 15, text='時刻', tag='label_time', font=('', 10))
     canvas.create_text(880, 15, text='現在値', tag='label_value', font=('', 10))
     canvas.create_text(930, 15, text='出来高', tag='label_volume', font=('', 10))
-    canvas.create_line(853, 0, 853, 450, fill='#c0c0c0', tag='split3')
-    canvas.create_line(903, 0, 903, 450, fill='#c0c0c0', tag='split4')
+    # canvas.create_line(853, 0, 853, 450, fill='#c0c0c0', tag='split3')
+    # canvas.create_line(903, 0, 903, 450, fill='#c0c0c0', tag='split4')
     canvas.create_line(953, 0, 953, 450, fill='#c0c0c0', tag='split5')
     canvas.create_rectangle(953, 2, 968, 450, tag='progress_bar_outline',
                             outline='#c0c0c0')
@@ -44,6 +44,8 @@ def canvas_layout(canvas):
                            tag='step_vsplit'+str(i))
     for i in range((450-30)//20):
         y = 40+20*i
+        canvas.create_rectangle(
+            801, y-9, 952, y+9, tag='step_volume_rec'+str(i), outline='white')
         canvas.create_text(
             828, y, text='', tag='step_time'+str(i), font=('', 10))
         canvas.create_text(880, y, text='',

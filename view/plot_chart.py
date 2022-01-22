@@ -120,30 +120,39 @@ class UpdateCanvas(threading.Thread):
             if self.stop_event.is_set():
                 print('stop')
                 break
-            # time.sleep(0.01)
-            time.sleep(1)
+            time.sleep(0.01)
+            # time.sleep(1)
             contract_price = int(data['約定値'])
             # プログレスバーの処理 長さが448
-            prog_bar_y=450-448*(index/len(row_df))
+            prog_bar_y = 450-448*(index/len(row_df))
             self.canvas.coords('progress_bar', 953, 450, 968, prog_bar_y)
             # 歩みね表示の処理
-            step_view = row_df[index-20 if index>=20 else 0:index+1]\
+            step_view = row_df[index-20 if index >= 20 else 0:index+1]\
                 .reset_index(drop=True)
             # 色付け処理
-            pre_buy_flag=True
-            step_view_l=len(step_view)
-            if index<21:
+            pre_buy_flag = True
+            step_view_l = len(step_view)
+            # 500万以上の買いの強調初期化
+            detect_amount=5000000
+            emphasis_col = 'red'
+            for i in range(21):
+                self.canvas.itemconfig('step_volume_rec'+str(i),outline='white')
+            # 最初の値
+            if index < 21:
                 pre_buy_flag = True
                 self.canvas.itemconfig(
                     'step_volume'+str(index), fill='red')
             else:
-                first_buy_flag_i=0
+                first_buy_flag_i = 0
                 while index-21-first_buy_flag_i >= 0:
                     if row_df[index-21-first_buy_flag_i:index-20-first_buy_flag_i]['約定値'].values[0] < \
-                        row_df[index-20-first_buy_flag_i:index-19-first_buy_flag_i]['約定値'].values[0]:
+                            row_df[index-20-first_buy_flag_i:index-19-first_buy_flag_i]['約定値'].values[0]:
                         pre_buy_flag = True
                         self.canvas.itemconfig(
                             'step_volume'+str(step_view_l-1), fill='red')
+                        if step_view[0:1]['約定値'].values[0]*step_view[0:1]['出来高'].values[0] > detect_amount:
+                            self.canvas.itemconfig('step_volume_rec'+str(step_view_l-1),
+                                                   outline=emphasis_col)
                         break
                     elif row_df[index-21-first_buy_flag_i:index-20-first_buy_flag_i]['約定値'].values[0] > \
                             row_df[index-20-first_buy_flag_i:index-19-first_buy_flag_i]['約定値'].values[0]:
@@ -151,21 +160,32 @@ class UpdateCanvas(threading.Thread):
                         self.canvas.itemconfig(
                             'step_volume'+str(step_view_l-1), fill='blue')
                         break
-                    first_buy_flag_i+=1
-                print(first_buy_flag_i)
+                    first_buy_flag_i += 1
+            # 最初の売買以降の処理
             for sv_index in range(1, step_view_l):
                 if step_view[sv_index-1:sv_index]['約定値'].values[0] < step_view[sv_index:sv_index+1]['約定値'].values[0]:
                     pre_buy_flag = True
                     self.canvas.itemconfig(
                         'step_volume'+str(step_view_l-sv_index-1), fill='red')
+                    if step_view[sv_index:sv_index+1]['約定値'].values[0] *\
+                            step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount:
+                        self.canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
+                                               outline=emphasis_col)
                 elif step_view[sv_index-1:sv_index]['約定値'].values[0] > step_view[sv_index:sv_index+1]['約定値'].values[0]:
                     pre_buy_flag = False
                     self.canvas.itemconfig(
                         'step_volume'+str(step_view_l-sv_index-1), fill='blue')
                 else:
-                    self.canvas.itemconfig(
-                        'step_volume'+str(step_view_l-sv_index-1), fill='red' if pre_buy_flag else 'blue')
-
+                    if pre_buy_flag:
+                        self.canvas.itemconfig(
+                            'step_volume'+str(step_view_l-sv_index-1), fill='red')
+                        if step_view[sv_index:sv_index+1]['約定値'].values[0] *\
+                                step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount:
+                            self.canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
+                                                   outline=emphasis_col)
+                    else:
+                        self.canvas.itemconfig(
+                            'step_volume'+str(step_view_l-sv_index-1), fill='blue')
 
             step_view = step_view.iloc[::-1].reset_index(drop=True)
             for sv_index, sv_data in step_view.iterrows():
@@ -314,10 +334,10 @@ class UpdateCanvas(threading.Thread):
                                            p_buy_sy, buy_fx, p_buy_fy)
                 else:
                     self.canvas.coords('buy_volume'+str(self.minutes_num),
-                                    linex, buy_sy, linex, buy_fy)
+                                       linex, buy_sy, linex, buy_fy)
                     self.canvas.coords('sell_volume'+str(self.minutes_num),
-                                    linex, sell_sy, linex, sell_fy)
-                    
+                                       linex, sell_sy, linex, sell_fy)
+
                 # ローソク足が範囲外の時の処理
                 if self.min_val > contract_price or four_per+10 > self.max_val:
                     pre_min_val = self.min_val
