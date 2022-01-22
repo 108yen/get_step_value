@@ -27,10 +27,14 @@ class UpdateCanvas(threading.Thread):
         self.min_val = min_val
         self.minutes_num = minutes_num+1  # 次の足から描画するので
         self.stop_event = threading.Event()
+        self.suspend_event=False
         self.setDaemon(True)
 
     def stop(self):
         self.stop_event.set()
+    
+    def suspend(self):
+        self.suspend_event=not self.suspend_event
 
     def run(self):
         # # 午前ぶん
@@ -120,6 +124,9 @@ class UpdateCanvas(threading.Thread):
             if self.stop_event.is_set():
                 print('stop')
                 break
+            if self.suspend_event:
+                while self.suspend_event:
+                    time.sleep(0.1)
             time.sleep(0.01)
             # time.sleep(1)
             contract_price = int(data['約定値'])

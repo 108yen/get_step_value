@@ -21,6 +21,10 @@ def start_button_click(event):
     uc.start()
 
 
+def suspend_button_click(event):
+    global uc
+    uc.suspend()
+
 def canvas_layout(canvas):
 
     # 出来高とチャートの分離線
@@ -99,6 +103,15 @@ def main():
     )
     stop_button.pack(side='left')
     stop_button.bind("<ButtonPress>", stop_button_click)
+    frame_tool_bar.pack(fill=tkinter.X)
+    suspend_button = tkinter.Button(
+        frame_tool_bar,
+        text="一時停止",
+        highlightbackground='black',
+        fg='black',
+    )
+    suspend_button.pack(side='left')
+    suspend_button.bind("<ButtonPress>", suspend_button_click)
     frame_tool_bar.pack(fill=tkinter.X)
 
     canvas.pack()
