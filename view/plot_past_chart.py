@@ -46,7 +46,7 @@ def split_five_min_data(code: str, date: str):
     # VWAP用
     sum_volume = 0
     trading_price = 0
-    for index, data in tqdm(row_df.iterrows()):
+    for index, data in tqdm(row_df.iterrows(),total=len(row_df)):
         value = int(data['約定値'])
         # 次の足に行くタイミング
         if split5m.time() <= datetime.strptime(data['時刻'], '%H:%M:%S').time():

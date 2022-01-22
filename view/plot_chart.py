@@ -3,6 +3,7 @@ import time
 import threading
 import pandas as pd
 from datetime import datetime, timedelta
+from tqdm import tqdm
 
 """
 ファイルを読み込んでcanvasにチャートを描画
@@ -115,15 +116,19 @@ class UpdateCanvas(threading.Thread):
         self.canvas.create_text(
             35, 15, text='', tag='vwap_dev_rate', font=('', 25))
 
-        for index, data in row_df.iterrows():
+        for index, data in tqdm(row_df.iterrows(),total=len(row_df)):
             if self.stop_event.is_set():
                 print('stop')
                 break
             time.sleep(0.01)
             contract_price = int(data['約定値'])
+            # プログレスバーの処理 長さが448
+            prog_bar_y=450-448*(index/len(row_df))
+            self.canvas.coords('progress_bar', 953, 450, 973, prog_bar_y)
             # 歩みね表示の処理
             step_view = row_df[index-20 if index>=20 else 0:index+1]\
                 .reset_index(drop=True)
+            # 色付け処理
             if index<20:
                 first=True
             else:
@@ -170,7 +175,7 @@ class UpdateCanvas(threading.Thread):
             if split5m.time() <= datetime.strptime(data['時刻'], '%H:%M:%S').time():
                 while datetime.strptime(data['時刻'], '%H:%M:%S').time() >= split5m.time():
                     split5m = split5m+timedelta(minutes=5)
-                print(split5m.strftime('%H:%M:%S'))
+                # print(split5m.strftime('%H:%M:%S'))
                 self.minutes_num += 1
                 if self.minutes_num >= 102:
                     self.minutes_num -= 1

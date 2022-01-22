@@ -1,7 +1,7 @@
 import openpyxl
 import xlwings
 import time
-import start_ex
+import get_data.start_ex as start_ex
 import pandas as pd
 from datetime import datetime
 

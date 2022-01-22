@@ -6,7 +6,7 @@ import schedule
 from remove_duplicate_data import remove_duplicate
 import os
 
-from view.plot_past_chart import split_five_min_data
+# from ..view.plot_past_chart import split_five_min_data
 
 # todo:非同期にする
 
@@ -25,10 +25,7 @@ def read_xlwings():
     wb = app.books.add()
     sheet = wb.sheets["Sheet1"]
     set_macro(sheet)
-    try:
-        get_step_value(sheet)
-    except TypeError as e:
-        print(e)
+    get_step_value(sheet)
     wb.close()
     app.kill()
 
@@ -65,8 +62,7 @@ def get_step_value(sheet):
         # time.sleep(0.1)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
-            # df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[
-            #     "時刻", "出来高", "約定値"]))
+            # この処理がめっちゃ重いので、後でもいいかも
             df_list[code] = remove_duplicate(df_list[code],
                                              pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"]))
 
@@ -87,16 +83,16 @@ def get_step_value(sheet):
         except (FileExistsError) as e:
             print(code+e)
     # 5分足データの保存
-    for code in CODE_LIST:
-        new_dir_path = 'data/'+today_str+'/5min'
-        os.makedirs(new_dir_path, exist_ok=True)
-        fname = new_dir_path+'/'+code+'.csv'
-        # わざわざファイル読んでるの効率悪い
-        try:
-            split_five_min_data(code, today_str).to_csv(
-                fname, encoding='cp932')
-        except (FileNotFoundError, FileExistsError) as e:
-            print(code+e)
+    # for code in CODE_LIST:
+    #     new_dir_path = 'data/'+today_str+'/5min'
+    #     os.makedirs(new_dir_path, exist_ok=True)
+    #     fname = new_dir_path+'/'+code+'.csv'
+    #     # わざわざファイル読んでるの効率悪い
+    #     try:
+    #         split_five_min_data(code, today_str).to_csv(
+    #             fname, encoding='cp932')
+    #     except (FileNotFoundError, FileExistsError) as e:
+    #         print(code+e)
 
     print("保存完了")
 
@@ -142,7 +138,6 @@ def test():
 
 def main():
     schedule.every().day.at("08:59").do(read_xlwings)
-    # schedule.every().day.at("12:29").do(read_xlwings)
     while True:
         schedule.run_pending()
         time.sleep(10)
