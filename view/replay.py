@@ -53,7 +53,6 @@ def canvas_layout(canvas):
         canvas.create_text(930, y, text='',
                            tag='step_volume'+str(i), font=('', 10))
 
-
 def main():
     CODE = '7370'
     DATE = '20220121'
@@ -63,6 +62,7 @@ def main():
     root = tkinter.Tk()
     root.configure(bg='white')
     root.geometry("1000x500")  # ウインドウサイズ（「幅x高さ」で指定）
+    # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
     codename_list = pd.read_csv(
         'data/code_list.csv', header=0, encoding='utf8')
     try:
@@ -81,24 +81,27 @@ def main():
     global uc
     uc = UpdateCanvas(canvas, CODE, DATE, CANDLE_WIDTH,
                       candle_rate, volume_rate, max_val, min_val, index)
+
+    frame_tool_bar = tkinter.Frame(root, borderwidth=2, relief=tkinter.SUNKEN)
     start_button = tkinter.Button(
-        root,
+        frame_tool_bar,
         text="スタート",
         highlightbackground='black',
         fg='black',
     )
-    start_button.pack()
+    start_button.pack(side='left')
     start_button.bind("<ButtonPress>", start_button_click)
     stop_button = tkinter.Button(
-        root,
+        frame_tool_bar,
         text="ストップ",
         highlightbackground='black',
         fg='black',
     )
-    stop_button.pack()
+    stop_button.pack(side='left')
     stop_button.bind("<ButtonPress>", stop_button_click)
+    frame_tool_bar.pack(fill=tkinter.X)
 
-    canvas.place(x=0, y=0)
+    canvas.pack()
     root.mainloop()
 
 
