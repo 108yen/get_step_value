@@ -55,15 +55,22 @@ def canvas_layout(canvas):
 
 
 def main():
-    root = tkinter.Tk()
-    root.title(u"GEI")
-    root.configure(bg='white')
-    root.geometry("1000x500")  # ウインドウサイズ（「幅x高さ」で指定）
-
     CODE = '7370'
     DATE = '20220121'
     PREDATE = '20220120'
     CANDLE_WIDTH = 4
+
+    root = tkinter.Tk()
+    root.configure(bg='white')
+    root.geometry("1000x500")  # ウインドウサイズ（「幅x高さ」で指定）
+    codename_list = pd.read_csv(
+        'data/code_list.csv', header=0, encoding='utf8')
+    try:
+        title=codename_list[codename_list['コード'] == 7370]['銘柄名'].values[0]
+    except IndexError:
+        title='銘柄リストにない銘柄コード'
+    root.title(title)
+
 
     # キャンバスエリア
     canvas = tkinter.Canvas(root, width=980, height=450, bg='white')
