@@ -1,4 +1,5 @@
 import tkinter
+from tkinter import ttk
 import time
 import threading
 import pandas as pd
@@ -25,6 +26,10 @@ def suspend_button_click(event):
     global uc
     uc.suspend()
 
+def buy_button_click(event):
+    global uc
+    uc.buy()
+
 def canvas_layout(canvas):
 
     # 出来高とチャートの分離線
@@ -41,6 +46,12 @@ def canvas_layout(canvas):
                             outline='#c0c0c0')
     canvas.create_rectangle(953, 450, 968, 450, tag='progress_bar',
                             outline='#c0c0c0', fill='#c0c0c0')
+    # canvas.create_text(998, 15, text='購入時刻', tag='label_time', font=('', 8))
+    # canvas.create_text(1048, 15, text='購入価格', tag='label_value', font=('', 8))
+    # canvas.create_text(1098, 15, text='売却時刻', tag='label_volume', font=('', 8))
+    # canvas.create_text(1148, 15, text='売却価格', tag='label_value', font=('', 8))
+    # canvas.create_text(1198, 15, text='利益', tag='label_volume', font=('', 8))
+    # canvas.create_line(968, 30, 1220, 30, tag='vsplit0')
     canvas.create_line(800, 30, 953, 30, tag='step_vsplit0')
     for i in range(1, (450-30)//20):  # 21個
         y = 30+20*i
@@ -65,7 +76,7 @@ def main():
 
     root = tkinter.Tk()
     root.configure(bg='white')
-    root.geometry("1000x500")  # ウインドウサイズ（「幅x高さ」で指定）
+    root.geometry("1000x700")  # ウインドウサイズ（「幅x高さ」で指定）
     # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
     codename_list = pd.read_csv(
         'data/code_list.csv', header=0, encoding='utf8')
@@ -76,15 +87,6 @@ def main():
     root.title(title)
 
 
-    # キャンバスエリア
-    canvas = tkinter.Canvas(root, width=980, height=450, bg='white')
-    canvas_layout(canvas)
-    candle_rate, volume_rate, max_val, min_val, index = \
-        plot_past_chart.plot(canvas, CODE, PREDATE)
-    # キャンバスを動かすやつ
-    global uc
-    uc = UpdateCanvas(canvas, CODE, DATE, CANDLE_WIDTH,
-                      candle_rate, volume_rate, max_val, min_val, index)
 
     frame_tool_bar = tkinter.Frame(root, borderwidth=2, relief=tkinter.SUNKEN)
     start_button = tkinter.Button(
@@ -113,8 +115,50 @@ def main():
     suspend_button.pack(side='left')
     suspend_button.bind("<ButtonPress>", suspend_button_click)
     frame_tool_bar.pack(fill=tkinter.X)
+    buy_button = tkinter.Button(
+        frame_tool_bar,
+        text="購入",
+        highlightbackground='black',
+        fg='black',
+    )
+    buy_button.pack(side='left')
+    buy_button.bind("<ButtonPress>", buy_button_click)
+    frame_tool_bar.pack(fill=tkinter.X)
 
+    side_panel = tkinter.Frame(root, relief=tkinter.SUNKEN)
+    # キャンバスエリア
+    canvas = tkinter.Canvas(side_panel, width=1000, height=450, bg='white')
+    canvas_layout(canvas)
+    candle_rate, volume_rate, max_val, min_val, index = \
+        plot_past_chart.plot(canvas, CODE, PREDATE)
     canvas.pack()
+
+    tree_column = ('buy_time', 'buy_value',
+                   'sell_time', 'sell_value', 'profit','prof_rate')
+    tree = ttk.Treeview(side_panel)
+    tree['columns']=tree_column
+    tree["show"] = "headings"
+    tree.column('buy_time', width=70)
+    tree.column('buy_value', width=70)
+    tree.column('sell_time', width=70)
+    tree.column('sell_value', width=70)
+    tree.column('profit', width=70)
+    tree.column('prof_rate', width=70)
+    tree.heading('buy_time', text='購入時刻')
+    tree.heading('buy_value', text='購入価格')
+    tree.heading('sell_time', text='売却時刻')
+    tree.heading('sell_value', text='売却価格')
+    tree.heading('profit', text='利益')
+    tree.heading('prof_rate',text='利益率')
+    tree.pack(side=tkinter.LEFT)
+
+    side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y)
+
+    # キャンバスを動かすやつ
+    global uc
+    uc = UpdateCanvas(tree,canvas, CODE, DATE, CANDLE_WIDTH,
+                      candle_rate, volume_rate, max_val, min_val, index)
+
     root.mainloop()
 
 

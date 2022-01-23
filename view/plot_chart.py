@@ -4,6 +4,9 @@ import threading
 import pandas as pd
 from datetime import datetime, timedelta
 from tqdm import tqdm
+import math
+
+from xarray import concat
 
 """
 ファイルを読み込んでcanvasにチャートを描画
@@ -15,8 +18,9 @@ candle_width    int
 
 
 class UpdateCanvas(threading.Thread):
-    def __init__(self, canvas, code, date, candle_width, candle_rate, volume_rate, max_val, min_val, minutes_num):
+    def __init__(self, tree, canvas, code, date, candle_width, candle_rate, volume_rate, max_val, min_val, minutes_num):
         super(UpdateCanvas, self).__init__()
+        self.tree = tree
         self.canvas = canvas
         self.code = code
         self.date = date
@@ -27,14 +31,18 @@ class UpdateCanvas(threading.Thread):
         self.min_val = min_val
         self.minutes_num = minutes_num+1  # 次の足から描画するので
         self.stop_event = threading.Event()
-        self.suspend_event=False
+        self.suspend_event = False
+        self.buy_event = False
         self.setDaemon(True)
 
     def stop(self):
         self.stop_event.set()
-    
+
     def suspend(self):
-        self.suspend_event=not self.suspend_event
+        self.suspend_event = not self.suspend_event
+
+    def buy(self):
+        self.buy_event = True
 
     def run(self):
         # # 午前ぶん
@@ -120,7 +128,18 @@ class UpdateCanvas(threading.Thread):
         self.canvas.create_text(
             35, 15, text='', tag='vwap_dev_rate', font=('', 25))
 
+        # 購入処理用の変数
+        buy_time = ''
+        buy_val = -1
+        sell_val = -1
+        profit = -1
+        prof_rate = -1
+        p_volume = -1
+        tree_iid = -1
+
+        # リプレイ処理
         for index, data in row_df.iterrows():
+            # 停止一時停止の処理
             if self.stop_event.is_set():
                 print('stop')
                 break
@@ -130,6 +149,34 @@ class UpdateCanvas(threading.Thread):
             time.sleep(0.01)
             # time.sleep(1)
             contract_price = int(data['約定値'])
+            # 購入した際の処理
+            if self.buy_event:
+                self.buy_event = False
+                if buy_val==-1:
+                    buy_time = data['時刻']
+                    buy_val = contract_price
+                    p_volume = math.floor(10000/buy_val)*100
+                    sell_val = math.ceil(buy_val*1.02)
+                    profit = (contract_price-buy_val)*p_volume
+                    tree_iid = self.tree.insert(parent='', index='end', values=(
+                        buy_time, buy_val, '', '('+str(sell_val)+')', "{:,}".format(profit), 0))
+            # 利確
+            elif sell_val < contract_price and buy_val != -1:
+                self.tree.item(tree_iid, values=(
+                    buy_time, buy_val, data['時刻'], sell_val, "{:,}".format(profit), prof_rate))
+                buy_time = ''
+                buy_val = -1
+                sell_val = -1
+                profit = -1
+                prof_rate = -1
+                p_volume = -1
+                tree_iid = -1
+            elif buy_val != -1:
+                profit = (contract_price-buy_val)*p_volume
+                prof_rate = round(((contract_price-buy_val)/buy_val)*100, 2)
+                self.tree.item(tree_iid, values=(
+                    buy_time, buy_val, '', '('+str(sell_val)+')',  "{:,}".format(profit), prof_rate))
+
             # プログレスバーの処理 長さが448
             prog_bar_y = 450-448*(index/len(row_df))
             self.canvas.coords('progress_bar', 953, 450, 968, prog_bar_y)
@@ -140,10 +187,11 @@ class UpdateCanvas(threading.Thread):
             pre_buy_flag = True
             step_view_l = len(step_view)
             # 500万以上の買いの強調初期化
-            detect_amount=5000000
+            detect_amount = 5000000
             emphasis_col = 'red'
             for i in range(21):
-                self.canvas.itemconfig('step_volume_rec'+str(i),outline='white')
+                self.canvas.itemconfig(
+                    'step_volume_rec'+str(i), outline='white')
             # 最初の値
             if index < 21:
                 pre_buy_flag = True
