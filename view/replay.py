@@ -69,9 +69,9 @@ def canvas_layout(canvas):
                            tag='step_volume'+str(i), font=('', 10))
 
 def main():
-    CODE = '7370'
-    DATE = '20220121'
-    PREDATE = '20220120'
+    CODE = '9211'
+    DATE = '20220126'
+    PREDATE = '20220125'
     CANDLE_WIDTH = 4
 
     root = tkinter.Tk()
@@ -81,7 +81,7 @@ def main():
     codename_list = pd.read_csv(
         'data/code_list.csv', header=0, encoding='utf8')
     try:
-        title=codename_list[codename_list['コード'] == 7370]['銘柄名'].values[0]
+        title=codename_list[codename_list['コード'] == int(CODE)]['銘柄名'].values[0]
     except IndexError:
         title='銘柄リストにない銘柄コード'
     root.title(title)

@@ -43,4 +43,4 @@ def xw_apps_add_fixed() -> xw.App:
         except:
             time.sleep(1)
 
-    return xw.apps[pid]
+    return xw.apps[pid],pid
