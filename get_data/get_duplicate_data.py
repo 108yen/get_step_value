@@ -1,3 +1,6 @@
+import queue
+from multiprocessing import Queue
+from multiprocessing import Process
 import time
 import start_ex
 from get_hwnds_for_pid import get_hwnds_for_pid
@@ -23,22 +26,17 @@ CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
 
 
 def read_xlwings():
-    app,pid = start_ex.xw_apps_add_fixed()
-    # app.visible = False
-    hwnds = get_hwnds_for_pid(pid)
-    rect = win32gui.GetWindowRect(hwnds[0])
-    wb = app.books.add()
-    sheet = wb.sheets["Sheet1"]
-    set_macro(sheet)
-    while sheet.cells(3, 1).value is None:
-        print('RSS接続再試行')
-        pyautogui.click(rect[0]+1520, rect[1]+100)
-        pyautogui.click(rect[0]+50, rect[1]+200)
-        time.sleep(1)
 
-    get_step_value(sheet)
-    wb.close()
-    app.kill()
+    q=Queue()
+    p1=Process(target=get_step_value,args=(q,))
+    p2=Process(target=remove_dupulicate_p,args=(q,))
+    # get_step_value(sheet)
+    p1.start()
+    p2.start()
+    p1.join()
+    print('p1終了')
+    p2.join()
+    print('p2終了')
 
 
 def set_macro(sheet):
@@ -48,7 +46,21 @@ def set_macro(sheet):
             1, 1+index*3).value = "=@RssTickList(,\"" + code+".T\",100)"
 
 
-def get_step_value(sheet):
+def get_step_value(q):
+    # エクセル開いたりする処理
+    app, pid = start_ex.xw_apps_add_fixed()
+    # app.visible = False
+    hwnds = get_hwnds_for_pid(pid)
+    rect = win32gui.GetWindowRect(hwnds[0])
+    wb = app.books.add()
+    sheet = wb.sheets["Sheet1"]
+    set_macro(sheet)
+    while sheet.cells(3, 1).value is None:
+        print('RSS接続再試行')
+        win32gui.SetForegroundWindow(hwnds[0])
+        pyautogui.click(rect[0]+1520, rect[1]+100)
+        pyautogui.click(rect[0]+50, rect[1]+200)
+        time.sleep(1)
 
     n = 0
     start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
@@ -70,29 +82,71 @@ def get_step_value(sheet):
             print('ヌーン')
             time.sleep(3000)
             print('ぬーん終わり')
-        # time.sleep(0.1)
+        time.sleep(0.1)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
             # この処理がめっちゃ重いので、後でもいいかも
-            df_list[code] = remove_duplicate(df_list[code],
-                                             pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"]))
+            # df_list[code] = remove_duplicate(df_list[code],
+            #                                  pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"]))
+            df_list[code] = pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
+        # 何も処理せずまとめてキューにぶち込む
+        q.put(df_list)
 
         n += 1
         if n % 1000 == 0:
             print("取得回数："+str(n))
 
+    wb.close()
+    app.kill()
+
+    # if datetime.today().time() >= fin_pm:
+    #     exit()  # ほんとはここじゃない
+
+
+def remove_dupulicate_p(q):
+    # Excel起動するまで待ち
+    time.sleep(10)
+    # 節目の時間
+    start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
+    fin_am = datetime.strptime("11:30:30", '%H:%M:%S').time()
+    start_pm = datetime.strptime("12:20:00", '%H:%M:%S').time()
+    fin_pm = datetime.strptime("15:00:30", '%H:%M:%S').time()
+    # dataframeを銘柄分作成（結構頭悪い処理）
+    df_list = {}
+    for code in CODE_LIST:
+        df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
+
+    while True:
+        try:
+            # 取り出し
+            get_df_list = q.get(block=True, timeout=10)
+            # 銘柄ごとに動く処理
+            for index, code in enumerate(CODE_LIST):
+                df_list[code] = remove_duplicate(df_list[code],get_df_list[code])
+        except queue.Empty:
+            print('タイムアウト')
+            # ひけてたら終了
+            if datetime.today().time() > fin_pm:
+                print('処理終了')
+                break
+        except Exception as e:
+            print(e)
+
+    save_data(df_list)
+
+def save_data(data):
     # 歩みね保存
     today_str = datetime.today().strftime('%Y%m%d')
     for code in CODE_LIST:
-        df_list[code] = df_list[code].reset_index(drop=True)
+        data[code] = data[code].reset_index(drop=True)
         new_dir_path = 'data/'+today_str
         fname = new_dir_path+'/'+code+'.csv'
         # fname = 'data/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
         try:
             os.makedirs(new_dir_path, exist_ok=True)
-            df_list[code].to_csv(fname, encoding='cp932')
-        except (FileExistsError) as e:
-            print(code+e)
+            data[code].to_csv(fname, encoding='cp932')
+        except Exception as e:
+            print(code+':'+e)
     # 5分足データの保存
     # for code in CODE_LIST:
     #     new_dir_path = 'data/'+today_str+'/5min'
@@ -106,10 +160,6 @@ def get_step_value(sheet):
     #         print(code+e)
 
     print("保存完了")
-
-    # if datetime.today().time() >= fin_pm:
-    #     exit()  # ほんとはここじゃない
-
 
 def test():
     # test = np.zeros((len(CODE_LIST), 1, 3))
