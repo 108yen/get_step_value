@@ -62,7 +62,7 @@ def get_step_value(q):
         pyautogui.click(rect[0]+50, rect[1]+200)
         time.sleep(1)
 
-    n = 0
+    # n = 0
     start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
     fin_am = datetime.strptime("11:30:30", '%H:%M:%S').time()
     start_pm = datetime.strptime("12:20:00", '%H:%M:%S').time()
@@ -79,7 +79,7 @@ def get_step_value(q):
         #         start_pm < datetime.today().time() < fin_pm:
         # 昼休憩
         if fin_am < datetime.today().time() < start_pm:
-            print('ヌーン')
+            print('\nヌーン')
             time.sleep(3000)
             print('ぬーん終わり')
         time.sleep(0.1)
@@ -92,9 +92,9 @@ def get_step_value(q):
         # 何も処理せずまとめてキューにぶち込む
         q.put(df_list)
 
-        n += 1
-        if n % 1000 == 0:
-            print("取得回数："+str(n))
+        # n += 1
+        # if n % 1000 == 0:
+        #     print("取得回数："+str(n))
 
     wb.close()
     app.kill()
@@ -120,11 +120,12 @@ def remove_dupulicate_p(q):
         try:
             # 取り出し
             get_df_list = q.get(block=True, timeout=10)
+            print("\r残キュー数:"+str(q.qsize()), end="")
             # 銘柄ごとに動く処理
             for index, code in enumerate(CODE_LIST):
                 df_list[code] = remove_duplicate(df_list[code],get_df_list[code])
         except queue.Empty:
-            print('タイムアウト')
+            print('\nタイムアウト')
             # ひけてたら終了
             if datetime.today().time() > fin_pm:
                 print('処理終了')

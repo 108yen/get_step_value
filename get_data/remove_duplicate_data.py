@@ -32,8 +32,7 @@ def remove_duplicate(original_df, input_df):
             original_df = input_df.dropna()
         else:
             i = 0
-            flag = True
-            while flag:
+            while True:
                 # input_dfの中で一致する行を探す
                 while i < len(input_df) and not compare_df(original_df[:1], input_df[i:i+1]):
                     i += 1
@@ -43,7 +42,7 @@ def remove_duplicate(original_df, input_df):
                     print(input_df[:1])
                     original_df = pd.concat([input_df.dropna(), original_df])\
                             .reset_index(drop=True)
-                    flag = False
+                    break
                 else:
                     # それから先も比べてみる 最後まで比べるべき？10個くらいでいいかも
                     j = 1
@@ -56,7 +55,7 @@ def remove_duplicate(original_df, input_df):
                     else:
                         original_df = pd.concat(
                             [input_df[:i], original_df]).reset_index(drop=True)
-                        flag = False
+                        break
     return original_df
 
 

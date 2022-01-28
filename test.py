@@ -91,13 +91,13 @@ def process_in(q):
     for code in CODE_LIST:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
-    for i in range(100):
+    for i in range(1000):
         for index, code in enumerate(CODE_LIST):
             df_list[code] = pd.DataFrame(sheet.range(
                 (3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
 
         q.put(df_list)
-        print('process1:'+str(i))
+        # print('process1:'+str(i))
         # time.sleep(1)
     wb.close()
     app.kill()
@@ -114,7 +114,8 @@ def process2_out(q):
         try:
             # 取り出し
             get_df_list = q.get(block=True, timeout=3)
-            print('process2:'+str(i))
+            # print('process2:'+str(i))
+            print("\r残キュー数:"+str(q.qsize()), end="")
             i+=1
             # 銘柄ごとに動く処理
             for index, code in enumerate(CODE_LIST):
@@ -122,7 +123,7 @@ def process2_out(q):
                     df_list[code], get_df_list[code])
                 # print(df_list)
         except queue.Empty:
-            print('タイムアウト')
+            print('\nタイムアウト')
             break
         except Exception as e:
             print(e)
@@ -135,8 +136,16 @@ def process2_out(q):
         except Exception as e:
             print(code+':'+e)
 
+def while_test():
+    while True:
+        while False:
+            print('i')
+        else:
+            break
+    print('正常終了')
 
 if __name__ == '__main__':
     # main()
     # rpa_test()
-    multiprocess_test()
+    # multiprocess_test()
+    while_test()
