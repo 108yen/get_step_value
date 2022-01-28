@@ -1,10 +1,13 @@
 import time
 import start_ex
+from get_hwnds_for_pid import get_hwnds_for_pid
 import pandas as pd
 from datetime import datetime
 import schedule
 from remove_duplicate_data import remove_duplicate
 import os
+import win32gui
+import pyautogui
 
 # from ..view.plot_past_chart import split_five_min_data
 
@@ -22,9 +25,17 @@ CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
 def read_xlwings():
     app,pid = start_ex.xw_apps_add_fixed()
     # app.visible = False
+    hwnds = get_hwnds_for_pid(pid)
+    rect = win32gui.GetWindowRect(hwnds[0])
     wb = app.books.add()
     sheet = wb.sheets["Sheet1"]
     set_macro(sheet)
+    while sheet.cells(3, 1).value is None:
+        print('RSS接続再試行')
+        pyautogui.click(rect[0]+1520, rect[1]+100)
+        pyautogui.click(rect[0]+50, rect[1]+200)
+        time.sleep(1)
+
     get_step_value(sheet)
     wb.close()
     app.kill()
@@ -96,8 +107,8 @@ def get_step_value(sheet):
 
     print("保存完了")
 
-    if datetime.today().time() >= fin_pm:
-        exit()  # ほんとはここじゃない
+    # if datetime.today().time() >= fin_pm:
+    #     exit()  # ほんとはここじゃない
 
 
 def test():
@@ -137,11 +148,11 @@ def test():
 
 
 def main():
-    schedule.every().day.at("08:59").do(read_xlwings)
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
-    # test()
+    # schedule.every().day.at("08:59").do(read_xlwings)
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(10)
+    read_xlwings()
 
 
 if __name__ == '__main__':

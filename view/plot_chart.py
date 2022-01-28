@@ -163,7 +163,7 @@ class UpdateCanvas(threading.Thread):
             # 利確
             elif sell_val < contract_price and buy_val != -1:
                 self.tree.item(tree_iid, values=(
-                    buy_time, buy_val, data['時刻'], sell_val, "{:,}".format(profit), prof_rate))
+                    buy_time, buy_val, data['時刻'], contract_price, "{:,}".format(profit), prof_rate))
                 buy_time = ''
                 buy_val = -1
                 sell_val = -1
@@ -187,10 +187,10 @@ class UpdateCanvas(threading.Thread):
             pre_buy_flag = True
             step_view_l = len(step_view)
             # 500万以上の買いの強調初期化
-            detect_amount_1 = 2000000
-            detect_amount_2 = 5000000
-            emphasis_col_1 = '#cd5c5c'
-            emphasis_col_2 = 'red'
+            detect_amount_1 = 5000000
+            detect_amount_2 = 2000000
+            emphasis_col_1 = 'red'
+            emphasis_col_2 = '#cd5c5c'
             for i in range(21):
                 self.canvas.itemconfig(
                     'step_volume_rec'+str(i), outline='white')
