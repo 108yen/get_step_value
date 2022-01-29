@@ -82,7 +82,7 @@ def get_step_value(q):
             print('\nヌーン')
             time.sleep(3000)
             print('ぬーん終わり')
-        time.sleep(0.1)
+        time.sleep(0.5)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
             # この処理がめっちゃ重いので、後でもいいかも
@@ -199,11 +199,11 @@ def test():
 
 
 def main():
-    # schedule.every().day.at("08:59").do(read_xlwings)
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(10)
-    read_xlwings()
+    schedule.every().day.at("08:59").do(read_xlwings)
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+    # read_xlwings()
 
 
 if __name__ == '__main__':

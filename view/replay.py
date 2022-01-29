@@ -3,14 +3,24 @@ from tkinter import ttk
 import time
 import threading
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta,date
 from plot_chart import UpdateCanvas
 import plot_past_chart
+import jpholiday
 
 # todo：高値とか低値が狭まった時に倍率戻す処理
 # todo：歩値を出す（500万以上は強調）
 # todo：５分足のデータも別途保存したい
 
+# 祝日を独自に追加
+class Oliginal_Holiday(jpholiday.OriginalHoliday):
+    def _is_holiday(self, DATE):
+        if DATE == date(2022, 1, 3):
+            return True
+        return False
+
+    def _is_holiday_name(self, date):
+        return '特別休暇'
 
 def stop_button_click(event):
     global uc
@@ -68,10 +78,29 @@ def canvas_layout(canvas):
         canvas.create_text(930, y, text='',
                            tag='step_volume'+str(i), font=('', 10))
 
+# date=datetime.date
+def is_bisday(in_date):
+    # Date = datetime.date(int(DATE[0:4]), int(DATE[4:6]), int(DATE[6:8]))
+    if in_date.weekday() >= 5 or jpholiday.is_holiday(in_date):
+        return False
+    else:
+        return True
+
+# in:date=string "yyyymmdd"
+# out:string "yyyymmdd"
+
+
+def pre_bisday(in_date):
+    tmp_date = date(int(in_date[0:4]), int(in_date[4:6]),
+                             int(in_date[6:8]))-timedelta(days=1)
+    while not is_bisday(tmp_date):
+        tmp_date = tmp_date-timedelta(days=1)
+    return tmp_date.strftime('%Y%m%d')
+
 def main():
     CODE = '9211'
-    DATE = '20220126'
-    PREDATE = '20220125'
+    DATE = '20220127'
+    PREDATE = pre_bisday(DATE)  # 1/3が休日
     CANDLE_WIDTH = 4
 
     root = tkinter.Tk()
@@ -164,3 +193,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # print(pre_bisday('20220104'))
+
+
