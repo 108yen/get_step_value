@@ -132,6 +132,7 @@ class UpdateCanvas(threading.Thread):
         buy_time = ''
         buy_val = -1
         sell_val = -1
+        losscut_val = -1
         profit = -1
         prof_rate = -1
         p_volume = -1
@@ -157,16 +158,18 @@ class UpdateCanvas(threading.Thread):
                     buy_val = contract_price
                     p_volume = math.floor(10000/buy_val)*100
                     sell_val = math.ceil(buy_val*1.02)
+                    losscut_val = math.ceil(buy_val*0.97)
                     profit = (contract_price-buy_val)*p_volume
                     tree_iid = self.tree.insert(parent='', index='end', values=(
                         buy_time, buy_val, '', '('+str(sell_val)+')', "{:,}".format(profit), 0))
             # 利確
-            elif sell_val < contract_price and buy_val != -1:
+            elif (sell_val < contract_price or losscut_val > contract_price) and buy_val != -1:
                 self.tree.item(tree_iid, values=(
                     buy_time, buy_val, data['時刻'], contract_price, "{:,}".format(profit), prof_rate))
                 buy_time = ''
                 buy_val = -1
                 sell_val = -1
+                losscut_val = -1
                 profit = -1
                 prof_rate = -1
                 p_volume = -1
@@ -190,7 +193,7 @@ class UpdateCanvas(threading.Thread):
             detect_amount_1 = 5000000
             detect_amount_2 = 2000000
             emphasis_col_1 = 'red'
-            emphasis_col_2 = '#cd5c5c'
+            emphasis_col_2 = '#f08080'
             for i in range(21):
                 self.canvas.itemconfig(
                     'step_volume_rec'+str(i), outline='white')
