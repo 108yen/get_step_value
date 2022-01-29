@@ -91,7 +91,7 @@ def process_in(q):
     for code in CODE_LIST:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
-    for i in range(1000):
+    for i in range(100):
         for index, code in enumerate(CODE_LIST):
             df_list[code] = pd.DataFrame(sheet.range(
                 (3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
@@ -104,7 +104,7 @@ def process_in(q):
 
 
 def process2_out(q):
-    time.sleep(4)
+    time.sleep(5)
     df_list = {}
     for code in CODE_LIST:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
@@ -147,5 +147,5 @@ def while_test():
 if __name__ == '__main__':
     # main()
     # rpa_test()
-    # multiprocess_test()
-    while_test()
+    multiprocess_test()
+    # while_test()

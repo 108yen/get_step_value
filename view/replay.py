@@ -1,3 +1,4 @@
+from multiprocessing import Process
 import tkinter
 from tkinter import ttk
 import time
@@ -158,8 +159,6 @@ def main():
     # キャンバスエリア
     canvas = tkinter.Canvas(side_panel, width=1000, height=450, bg='white')
     canvas_layout(canvas)
-    candle_rate, volume_rate, max_val, min_val, index = \
-        plot_past_chart.plot(canvas, CODE, PREDATE)
     canvas.pack()
 
     tree_column = ('buy_time', 'buy_value',
@@ -183,12 +182,20 @@ def main():
 
     side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
+    draw_thread=threading.Thread(target=draw_p, args=(tree, canvas,
+            CODE, DATE, CANDLE_WIDTH, PREDATE))
+    draw_thread.start()
+    root.mainloop()
+
+
+def draw_p(tree, canvas, CODE, DATE, CANDLE_WIDTH, PREDATE):
     # キャンバスを動かすやつ
+    candle_rate, volume_rate, max_val, min_val, index = \
+        plot_past_chart.plot(canvas, CODE, PREDATE)
     global uc
     uc = UpdateCanvas(tree,canvas, CODE, DATE, CANDLE_WIDTH,
                       candle_rate, volume_rate, max_val, min_val, index)
 
-    root.mainloop()
 
 
 if __name__ == '__main__':

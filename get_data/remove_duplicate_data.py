@@ -22,7 +22,6 @@ def main():
 
 # 重複を覗いてoriginal_dfにinput_dfを結合してくれる関数
 
-
 def remove_duplicate(original_df, input_df):
     input_df = input_df[input_df['時刻'] != '--------']
     # 何もデータが入っていない時は無視
