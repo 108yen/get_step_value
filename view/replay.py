@@ -10,8 +10,9 @@ import plot_past_chart
 import jpholiday
 
 # todo：高値とか低値が狭まった時に倍率戻す処理
-# todo：歩値を出す（500万以上は強調）
 # todo：５分足のデータも別途保存したい
+# todo：クラスにする
+# todo:GUI上で銘柄入力とかしたい
 
 # 祝日を独自に追加
 class Oliginal_Holiday(jpholiday.OriginalHoliday):
@@ -100,7 +101,7 @@ def pre_bisday(in_date):
 
 def main():
     CODE = '9211'
-    DATE = '20220127'
+    DATE = '20220124'
     PREDATE = pre_bisday(DATE)  # 1/3が休日
     CANDLE_WIDTH = 4
 

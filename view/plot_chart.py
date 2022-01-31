@@ -147,7 +147,7 @@ class UpdateCanvas(threading.Thread):
             if self.suspend_event:
                 while self.suspend_event:
                     time.sleep(0.1)
-            time.sleep(0.02)
+            time.sleep(0.01)
             # time.sleep(1)
             contract_price = int(data['約定値'])
             # 購入した際の処理

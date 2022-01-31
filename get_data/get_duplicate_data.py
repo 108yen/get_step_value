@@ -34,9 +34,10 @@ def read_xlwings():
     p1.start()
     p2.start()
     p1.join()
-    print('p1終了')
+    print('\np1終了')
     p2.join()
     print('p2終了')
+    exit()
 
 
 def set_macro(sheet):
@@ -50,14 +51,16 @@ def get_step_value(q):
     # エクセル開いたりする処理
     app, pid = start_ex.xw_apps_add_fixed()
     # app.visible = False
-    hwnds = get_hwnds_for_pid(pid)
-    rect = win32gui.GetWindowRect(hwnds[0])
     wb = app.books.add()
     sheet = wb.sheets["Sheet1"]
     set_macro(sheet)
+    wb.save('data/RSS_step_value_reader.xlsx')
+
+    hwnd = win32gui.FindWindow(None, 'RSS_step_value_reader.xlsx - Excel')
+    rect = win32gui.GetWindowRect(hwnd)
     while sheet.cells(3, 1).value is None:
         print('RSS接続再試行')
-        win32gui.SetForegroundWindow(hwnds[0])
+        win32gui.SetForegroundWindow(hwnd)
         pyautogui.click(rect[0]+1520, rect[1]+100)
         pyautogui.click(rect[0]+50, rect[1]+200)
         time.sleep(1)
@@ -91,6 +94,7 @@ def get_step_value(q):
             df_list[code] = pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
         # 何も処理せずまとめてキューにぶち込む
         q.put(df_list)
+        # print('put')
 
         # n += 1
         # if n % 1000 == 0:
@@ -98,9 +102,8 @@ def get_step_value(q):
 
     wb.close()
     app.kill()
+    os.remove('data/RSS_step_value_reader.xlsx')
 
-    # if datetime.today().time() >= fin_pm:
-    #     exit()  # ほんとはここじゃない
 
 
 def remove_dupulicate_p(q):
@@ -116,16 +119,18 @@ def remove_dupulicate_p(q):
     for code in CODE_LIST:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
+    n=0
     while True:
         try:
             # 取り出し
             get_df_list = q.get(block=True, timeout=10)
-            print("\r残キュー数:"+str(q.qsize()), end="")
+            n+=1
+            print("\r残キュー数:"+str(q.qsize())+" 回数:"+str(n), end="")
             # 銘柄ごとに動く処理
             for index, code in enumerate(CODE_LIST):
                 df_list[code] = remove_duplicate(df_list[code],get_df_list[code])
         except queue.Empty:
-            print('\nタイムアウト')
+            # print('\nタイムアウト')
             # ひけてたら終了
             if datetime.today().time() > fin_pm:
                 print('処理終了')

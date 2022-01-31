@@ -1,3 +1,4 @@
+from datetime import datetime
 from logging import exception
 import queue
 import time
@@ -10,6 +11,7 @@ from get_data import start_ex
 from multiprocessing import Process
 from multiprocessing import Queue
 import os
+import schedule
 
 from get_data.remove_duplicate_data import remove_duplicate
 
@@ -67,22 +69,26 @@ def multiprocess_test():
     p1.join()
     p2.join()
     print('fin')
+    exit()
 
 
 def process_in(q):
     app, pid = start_ex.xw_apps_add_fixed()
     # app.visible = False
-    hwnds = get_hwnds_for_pid(pid)
-    rect = win32gui.GetWindowRect(hwnds[0])
+    # hwnds = get_hwnds_for_pid(pid)
     wb = app.books.add()
     sheet = wb.sheets["Sheet1"]
     for index, code in enumerate(CODE_LIST):
         sheet.cells(2, 1+index*3).value = ["時刻", "出来高", "約定値"]
         sheet.cells(
             1, 1+index*3).value = "=@RssTickList(,\"" + code+".T\",100)"
+    wb.save('data/RSS_step_value_reader.xlsx')
+
+    hwnd = win32gui.FindWindow(None, 'RSS_step_value_reader.xlsx - Excel')
+    rect = win32gui.GetWindowRect(hwnd)
     while sheet.cells(3, 1).value is None:
         print('RSS接続再試行')
-        win32gui.SetForegroundWindow(hwnds[0])
+        win32gui.SetForegroundWindow(hwnd)
         pyautogui.click(rect[0]+1520, rect[1]+100)
         pyautogui.click(rect[0]+50, rect[1]+200)
         time.sleep(1)
@@ -101,6 +107,7 @@ def process_in(q):
         # time.sleep(1)
     wb.close()
     app.kill()
+    os.remove('data/RSS_step_value_reader.xlsx')
 
 
 def process2_out(q):
@@ -130,9 +137,11 @@ def process2_out(q):
 
     for index, code in enumerate(CODE_LIST):
         df_list[code] = df_list[code].reset_index(drop=True)
+        today_str = datetime.today().strftime('%Y%m%d')
         try:
-            os.makedirs('data/test/20220129', exist_ok=True)
-            df_list[code].to_csv('data/test/20220129/'+str(code)+'.csv', encoding='cp932')
+            os.makedirs('data/test/'+today_str, exist_ok=True)
+            df_list[code].to_csv('data/test/'+today_str +
+                                 '/'+str(code)+'.csv', encoding='cp932')
         except Exception as e:
             print(code+':'+e)
 
@@ -144,8 +153,15 @@ def while_test():
             break
     print('正常終了')
 
+def schedule_test():
+    schedule.every().day.at("19:35").do(multiprocess_test)
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
-    multiprocess_test()
+    # multiprocess_test()
     # while_test()
+    schedule_test()
