@@ -4,7 +4,7 @@ from tkinter import ttk
 import time
 import threading
 import pandas as pd
-from datetime import datetime, timedelta,date
+from datetime import datetime, timedelta, date
 from plot_chart import UpdateCanvas
 import plot_past_chart
 import jpholiday
@@ -15,6 +15,8 @@ import jpholiday
 # todo:GUI上で銘柄入力とかしたい
 
 # 祝日を独自に追加
+
+
 class Oliginal_Holiday(jpholiday.OriginalHoliday):
     def _is_holiday(self, DATE):
         if DATE == date(2022, 1, 3):
@@ -23,6 +25,7 @@ class Oliginal_Holiday(jpholiday.OriginalHoliday):
 
     def _is_holiday_name(self, date):
         return '特別休暇'
+
 
 def stop_button_click(event):
     global uc
@@ -38,9 +41,11 @@ def suspend_button_click(event):
     global uc
     uc.suspend()
 
+
 def buy_button_click(event):
     global uc
     uc.buy()
+
 
 def canvas_layout(canvas):
 
@@ -81,6 +86,8 @@ def canvas_layout(canvas):
                            tag='step_volume'+str(i), font=('', 10))
 
 # date=datetime.date
+
+
 def is_bisday(in_date):
     # Date = datetime.date(int(DATE[0:4]), int(DATE[4:6]), int(DATE[6:8]))
     if in_date.weekday() >= 5 or jpholiday.is_holiday(in_date):
@@ -94,14 +101,15 @@ def is_bisday(in_date):
 
 def pre_bisday(in_date):
     tmp_date = date(int(in_date[0:4]), int(in_date[4:6]),
-                             int(in_date[6:8]))-timedelta(days=1)
+                    int(in_date[6:8]))-timedelta(days=1)
     while not is_bisday(tmp_date):
         tmp_date = tmp_date-timedelta(days=1)
     return tmp_date.strftime('%Y%m%d')
 
+
 def main():
-    CODE = '9211'
-    DATE = '20220124'
+    CODE = '7370'
+    DATE = '20220203'
     PREDATE = pre_bisday(DATE)  # 1/3が休日
     CANDLE_WIDTH = 4
 
@@ -112,12 +120,11 @@ def main():
     codename_list = pd.read_csv(
         'data/code_list.csv', header=0, encoding='utf8')
     try:
-        title=codename_list[codename_list['コード'] == int(CODE)]['銘柄名'].values[0]
+        title = codename_list[codename_list['コード']
+                              == int(CODE)]['銘柄名'].values[0]
     except IndexError:
-        title='銘柄リストにない銘柄コード'
+        title = '銘柄リストにない銘柄コード'
     root.title(title)
-
-
 
     frame_tool_bar = tkinter.Frame(root, borderwidth=2, relief=tkinter.SUNKEN)
     start_button = tkinter.Button(
@@ -136,7 +143,6 @@ def main():
     )
     stop_button.pack(side='left')
     stop_button.bind("<ButtonPress>", stop_button_click)
-    frame_tool_bar.pack(fill=tkinter.X)
     suspend_button = tkinter.Button(
         frame_tool_bar,
         text="一時停止",
@@ -145,10 +151,22 @@ def main():
     )
     suspend_button.pack(side='left')
     suspend_button.bind("<ButtonPress>", suspend_button_click)
-    frame_tool_bar.pack(fill=tkinter.X)
     buy_button = tkinter.Button(
         frame_tool_bar,
         text="購入",
+        highlightbackground='black',
+        fg='black',
+    )
+    buy_button.pack(side='left')
+    buy_button.bind("<ButtonPress>", buy_button_click)
+    code_box = tkinter.Entry(
+        frame_tool_bar,
+        width=20,
+    )
+    code_box.pack(side='left')
+    buy_button = tkinter.Button(
+        frame_tool_bar,
+        text="描画",
         highlightbackground='black',
         fg='black',
     )
@@ -163,9 +181,9 @@ def main():
     canvas.pack()
 
     tree_column = ('buy_time', 'buy_value',
-                   'sell_time', 'sell_value', 'profit','prof_rate')
+                   'sell_time', 'sell_value', 'profit', 'prof_rate')
     tree = ttk.Treeview(side_panel)
-    tree['columns']=tree_column
+    tree['columns'] = tree_column
     tree["show"] = "headings"
     tree.column('buy_time', width=70)
     tree.column('buy_value', width=70)
@@ -178,13 +196,13 @@ def main():
     tree.heading('sell_time', text='売却時刻')
     tree.heading('sell_value', text='売却価格')
     tree.heading('profit', text='利益')
-    tree.heading('prof_rate',text='利益率')
+    tree.heading('prof_rate', text='利益率')
     tree.pack(side=tkinter.LEFT)
 
     side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
-    draw_thread=threading.Thread(target=draw_p, args=(tree, canvas,
-            CODE, DATE, CANDLE_WIDTH, PREDATE))
+    draw_thread = threading.Thread(target=draw_p, args=(tree, canvas,
+                                                        CODE, DATE, CANDLE_WIDTH, PREDATE))
     draw_thread.start()
     root.mainloop()
 
@@ -194,13 +212,10 @@ def draw_p(tree, canvas, CODE, DATE, CANDLE_WIDTH, PREDATE):
     candle_rate, volume_rate, max_val, min_val, index = \
         plot_past_chart.plot(canvas, CODE, PREDATE)
     global uc
-    uc = UpdateCanvas(tree,canvas, CODE, DATE, CANDLE_WIDTH,
+    uc = UpdateCanvas(tree, canvas, CODE, DATE, CANDLE_WIDTH,
                       candle_rate, volume_rate, max_val, min_val, index)
-
 
 
 if __name__ == '__main__':
     main()
     # print(pre_bisday('20220104'))
-
-

@@ -11,17 +11,18 @@ from remove_duplicate_data import remove_duplicate
 import os
 import win32gui
 import pyautogui
+import ctypes
 
 # from ..view.plot_past_chart import split_five_min_data
 
 # todo:非同期にする
 
-CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
+CODE_LIST = ['9519', '9258', '9257', '9254', '9214','9213','9212', '9211', '9107','9101','9104',
              '7133', '7383', '7370', '7254',
              '6554', '6524', '6522',
              '5759',
              '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
-             '3604',
+             '3604','3936',
              '2585', '2484', '2427','2345', '2158']
 
 
@@ -57,13 +58,14 @@ def get_step_value(q):
     wb.save('data/RSS_step_value_reader.xlsx')
 
     hwnd = win32gui.FindWindow(None, 'RSS_step_value_reader.xlsx - Excel')
-    rect = win32gui.GetWindowRect(hwnd)
     while sheet.cells(3, 1).value is None:
         print('RSS接続再試行')
-        win32gui.SetForegroundWindow(hwnd)
+        rect = win32gui.GetWindowRect(hwnd)
+        ctypes.windll.user32.SetForegroundWindow(hwnd)
         pyautogui.click(rect[0]+1520, rect[1]+100)
         pyautogui.click(rect[0]+50, rect[1]+200)
-        time.sleep(1)
+        time.sleep(3)
+    win32gui.ShowWindow(hwnd, 6)
 
     # n = 0
     start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
@@ -76,25 +78,23 @@ def get_step_value(q):
     for code in CODE_LIST:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
+    # 時間まで待ち
+    while datetime.today().time()<start_am:
+        time.sleep(10)
+        
     # 場中動く処理
     while start_am < datetime.today().time() < fin_pm:
-        # while start_am < datetime.today().time() < fin_am or\
-        #         start_pm < datetime.today().time() < fin_pm:
         # 昼休憩
         if fin_am < datetime.today().time() < start_pm:
             print('\nヌーン')
             time.sleep(3000)
-            print('ぬーん終わり')
+            print('\nぬーん終わり')
         time.sleep(0.5)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
-            # この処理がめっちゃ重いので、後でもいいかも
-            # df_list[code] = remove_duplicate(df_list[code],
-            #                                  pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"]))
             df_list[code] = pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
         # 何も処理せずまとめてキューにぶち込む
         q.put(df_list)
-        # print('put')
 
         # n += 1
         # if n % 1000 == 0:
@@ -125,7 +125,7 @@ def remove_dupulicate_p(q):
             # 取り出し
             get_df_list = q.get(block=True, timeout=10)
             n+=1
-            print("\r残キュー数:"+str(q.qsize())+" 回数:"+str(n), end="")
+            print("\r残キュー数:"+str(q.qsize())+" 回数:"+str(n)+"   ", end="")
             # 銘柄ごとに動く処理
             for index, code in enumerate(CODE_LIST):
                 df_list[code] = remove_duplicate(df_list[code],get_df_list[code])
@@ -204,11 +204,11 @@ def test():
 
 
 def main():
-    schedule.every().day.at("08:59").do(read_xlwings)
-    while True:
-        schedule.run_pending()
-        time.sleep(10)
-    # read_xlwings()
+    # schedule.every().day.at("08:59").do(read_xlwings)
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(10)
+    read_xlwings()
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from multiprocessing import Process
 from multiprocessing import Queue
 import os
 import schedule
+import ctypes
 
 from get_data.remove_duplicate_data import remove_duplicate
 
@@ -85,13 +86,14 @@ def process_in(q):
     wb.save('data/RSS_step_value_reader.xlsx')
 
     hwnd = win32gui.FindWindow(None, 'RSS_step_value_reader.xlsx - Excel')
-    rect = win32gui.GetWindowRect(hwnd)
     while sheet.cells(3, 1).value is None:
         print('RSS接続再試行')
-        win32gui.SetForegroundWindow(hwnd)
+        rect = win32gui.GetWindowRect(hwnd)
+        ctypes.windll.user32.SetForegroundWindow(hwnd)
         pyautogui.click(rect[0]+1520, rect[1]+100)
         pyautogui.click(rect[0]+50, rect[1]+200)
-        time.sleep(1)
+        time.sleep(3)
+    win32gui.ShowWindow(hwnd,6)
 
     df_list = {}
     for code in CODE_LIST:
@@ -154,14 +156,31 @@ def while_test():
     print('正常終了')
 
 def schedule_test():
-    schedule.every().day.at("19:35").do(multiprocess_test)
+    schedule.every().day.at("17:03").do(multiprocess_test)
     while True:
         schedule.run_pending()
         time.sleep(10)
 
+def save_codelist():
+    codelist = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
+                '7133', '7383', '7370', '7254',
+                '6554', '6524', '6522',
+                '5759',
+                '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
+                '3604',
+                '2585', '2484', '2427', '2345', '2158']
+
+    codename_list = pd.read_csv(
+        'data/code_list.csv', header=0, encoding='utf8')
+    try:
+        title = codename_list[codename_list['コード']
+                              == int(CODE)]['銘柄名'].values[0]
+    except IndexError:
+        title = '銘柄リストにない銘柄コード'
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
-    # multiprocess_test()
+    multiprocess_test()
     # while_test()
-    schedule_test()
+    # schedule_test()

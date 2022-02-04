@@ -193,7 +193,7 @@ class UpdateCanvas(threading.Thread):
             detect_amount_1 = 5000000
             detect_amount_2 = 2000000
             emphasis_col_1 = 'red'
-            emphasis_col_2 = '#f08080'
+            emphasis_col_2 = 'orange'
             for i in range(21):
                 self.canvas.itemconfig(
                     'step_volume_rec'+str(i), outline='white')
