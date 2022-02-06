@@ -136,7 +136,7 @@ class Replay_Chart():
             'data/code_list.csv', header=0, encoding='utf8')
         try:
             title = code+' '+codename_list[codename_list['コード']
-                                  == int(code)]['銘柄名'].values[0]
+                                  == int(code)]['銘柄名'].values[0]+'    '+self.DATE
         except IndexError:
             title = '銘柄リストにない銘柄コード'
         self.root.title(title)
