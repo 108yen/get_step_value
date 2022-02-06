@@ -32,7 +32,8 @@ class Replay_Chart():
         self.uc.stop()
 
     def start_button_click(self, event):
-        self.uc.start()
+        if not self.uc.is_alive():
+            self.uc.start()
 
     def suspend_button_click(self, event):
         self.uc.suspend()
@@ -44,6 +45,8 @@ class Replay_Chart():
         if self.uc.is_alive():
             self.uc.stop()
         # 消す処理
+        for i in self.tree.get_children():
+            self.tree.delete(i)
         for i in range((450-30)//20):
             self.canvas.itemconfig(
                 'step_time'+str(i), text='')
@@ -56,9 +59,11 @@ class Replay_Chart():
                 self.canvas.delete(item+str(i))
         in_str = self.code_box.get()
         if len(in_str) == 4 and in_str.isdecimal():
-            self.set_window_title(in_str)
+            # date=self.year_cb.get()+self.month_cb.get()+self.day_cb.get()
+            date=datetime(int(self.year_cb.get()),int(self.month_cb.get()),int(self.day_cb.get())).strftime('%Y%m%d')
+            self.set_window_title(in_str,date)
             self.draw_p(self.tree, self.canvas,
-                        self.code_box.get(), self.DATE, self.CANDLE_WIDTH, self.pre_bisday(self.DATE))
+                        self.code_box.get(), date, self.CANDLE_WIDTH, self.pre_bisday(date))
         else:
             print('入力コードの書式エラー')
         # print(self.code_box.get())
@@ -130,13 +135,13 @@ class Replay_Chart():
             tmp_date = tmp_date-timedelta(days=1)
         return tmp_date.strftime('%Y%m%d')
 
-    def set_window_title(self,code):
+    def set_window_title(self,code,date):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         codename_list = pd.read_csv(
             'data/code_list.csv', header=0, encoding='utf8')
         try:
             title = code+' '+codename_list[codename_list['コード']
-                                  == int(code)]['銘柄名'].values[0]+'    '+self.DATE
+                                  == int(code)]['銘柄名'].values[0]+'    '+date
         except IndexError:
             title = '銘柄リストにない銘柄コード'
         self.root.title(title)
@@ -144,15 +149,15 @@ class Replay_Chart():
 
     def __init__(self):
         CODE = '7370'
-        self.DATE = '20220201'
-        predate = self.pre_bisday(self.DATE)  # 1/3が休日
+        DATE = '20220202'
+        predate = self.pre_bisday(DATE)  # 1/3が休日
         self.CANDLE_WIDTH = 4
 
         self.root = tkinter.Tk()
         self.root.configure(bg='white')
         self.root.geometry("1000x700")  # ウインドウサイズ（「幅x高さ」で指定）
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
-        self.set_window_title(CODE)
+        self.set_window_title(CODE,DATE)
 
         frame_tool_bar = tkinter.Frame(self.root, borderwidth=2, relief=tkinter.SUNKEN)
         start_button = tkinter.Button(
@@ -187,11 +192,40 @@ class Replay_Chart():
         )
         buy_button.pack(side='right')
         buy_button.bind("<ButtonPress>", self.buy_button_click)
+        code_label=tkinter.Label(frame_tool_bar,text='銘柄コード:')
+        code_label.pack(side='left')
         self.code_box = tkinter.Entry(
             frame_tool_bar,
-            width=20,
+            width=5,
         )
-        self.code_box.pack(side='left')
+        self.code_box.pack(side='left',padx=4)
+        self.year_cb=tkinter.ttk.Combobox(
+            frame_tool_bar,
+            width=5,
+            values=('2022','2021')
+            )
+        self.year_cb.current(0)
+        self.year_cb.pack(side='left')
+        year_label = tkinter.Label(frame_tool_bar, text='年')
+        year_label.pack(side='left')
+        self.month_cb = tkinter.ttk.Combobox(
+            frame_tool_bar,
+            width=2,
+            values=tuple(range(1,13))
+        )
+        self.month_cb.current(int(datetime.today().strftime('%m'))-1)
+        self.month_cb.pack(side='left')
+        month_label = tkinter.Label(frame_tool_bar, text='月')
+        month_label.pack(side='left')
+        self.day_cb = tkinter.ttk.Combobox(
+            frame_tool_bar,
+            width=2,
+            values=tuple(range(1, 32))
+        )
+        self.day_cb.current(int(datetime.today().strftime('%d'))-1)
+        self.day_cb.pack(side='left')
+        day_label = tkinter.Label(frame_tool_bar, text='日')
+        day_label.pack(side='left')
         draw_chart = tkinter.Button(
             frame_tool_bar,
             text="描画",
@@ -230,7 +264,7 @@ class Replay_Chart():
         side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
         draw_thread = threading.Thread(target=self.draw_p, args=(self.tree, self.canvas,
-                                                            CODE, self.DATE, self.CANDLE_WIDTH, predate))
+                                                            CODE, DATE, self.CANDLE_WIDTH, predate))
         draw_thread.start()
         self.root.mainloop()
 
