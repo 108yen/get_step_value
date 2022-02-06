@@ -109,11 +109,6 @@ class UpdateCanvas(threading.Thread):
                                 fill=buy_col, tag='buy_volume'+str(self.minutes_num))
         self.canvas.create_line(15, 450, 15, 450, width=5,
                                 fill=sell_col, tag='sell_volume'+str(self.minutes_num))
-        # 2%と4%の線
-        self.canvas.create_line(0, defy, self.canvas.winfo_width(),
-                                defy, width=1, fill='#3cb371', tag='two_per')
-        self.canvas.create_line(0, defy, self.canvas.winfo_width(),
-                                defy, width=1, fill='#ffa07a', tag='four_per')
         # vwap(前日の終わりとつなげる)
         self.canvas.create_line(vwap_sx, vwap_sy, vwap_fx, vwap_fy,
                                 fill='#ff6347', tag='vwap'+str(self.minutes_num))
@@ -122,8 +117,6 @@ class UpdateCanvas(threading.Thread):
                                 self.candle_width//2, defy, tag='line'+str(self.minutes_num))
         self.canvas.create_rectangle(10, defy, 10+self.candle_width,
                                      defy, fill='red', tag='rect'+str(self.minutes_num))
-        # 価格表示
-        self.canvas.create_text(60, defy, text='', tag='value')
         # vwap乖離率表示
         self.canvas.create_text(
             35, 15, text='', tag='vwap_dev_rate', font=('', 25))

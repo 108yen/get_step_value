@@ -3,6 +3,7 @@ import tkinter
 from tkinter import ttk
 import time
 import threading
+from matplotlib.pyplot import draw
 import pandas as pd
 from datetime import datetime, timedelta, date
 from plot_chart import UpdateCanvas
@@ -40,7 +41,27 @@ class Replay_Chart():
         self.uc.buy()
 
     def draw_chart_click(self,event):
-        print(self.code_box.get())
+        if self.uc.is_alive():
+            self.uc.stop()
+        # 消す処理
+        for i in range((450-30)//20):
+            self.canvas.itemconfig(
+                'step_time'+str(i), text='')
+            self.canvas.itemconfig(
+                'step_value'+str(i), text='')
+            self.canvas.itemconfig(
+                'step_volume'+str(i), text='')
+        for i in range(102):
+            for item in ['line', 'rect', 'sell_volume', 'buy_volume', 'vwap']:
+                self.canvas.delete(item+str(i))
+        in_str = self.code_box.get()
+        if len(in_str) == 4 and in_str.isdecimal():
+            self.set_window_title(in_str)
+            self.draw_p(self.tree, self.canvas,
+                        self.code_box.get(), self.DATE, self.CANDLE_WIDTH, self.pre_bisday(self.DATE))
+        else:
+            print('入力コードの書式エラー')
+        # print(self.code_box.get())
 
 
     def canvas_layout(self,canvas):
@@ -80,6 +101,13 @@ class Replay_Chart():
                             tag='step_value'+str(i), font=('', 10))
             canvas.create_text(930, y, text='',
                             tag='step_volume'+str(i), font=('', 10))
+        # 2%と4%の線
+        self.canvas.create_line(0, 0, self.canvas.winfo_width(),
+                                0, width=1, fill='#3cb371', tag='two_per')
+        self.canvas.create_line(0, 0, self.canvas.winfo_width(),
+                                0, width=1, fill='#ffa07a', tag='four_per')
+        # 価格表示
+        self.canvas.create_text(60, 0, text='', tag='value')
 
     # date=datetime.date
 
@@ -102,27 +130,31 @@ class Replay_Chart():
             tmp_date = tmp_date-timedelta(days=1)
         return tmp_date.strftime('%Y%m%d')
 
-
-    def __init__(self):
-        CODE = '7370'
-        DATE = '20220201'
-        PREDATE = self.pre_bisday(DATE)  # 1/3が休日
-        CANDLE_WIDTH = 4
-
-        root = tkinter.Tk()
-        root.configure(bg='white')
-        root.geometry("1000x700")  # ウインドウサイズ（「幅x高さ」で指定）
+    def set_window_title(self,code):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         codename_list = pd.read_csv(
             'data/code_list.csv', header=0, encoding='utf8')
         try:
-            title = codename_list[codename_list['コード']
-                                == int(CODE)]['銘柄名'].values[0]
+            title = code+' '+codename_list[codename_list['コード']
+                                  == int(code)]['銘柄名'].values[0]
         except IndexError:
             title = '銘柄リストにない銘柄コード'
-        root.title(title)
+        self.root.title(title)
 
-        frame_tool_bar = tkinter.Frame(root, borderwidth=2, relief=tkinter.SUNKEN)
+
+    def __init__(self):
+        CODE = '7370'
+        self.DATE = '20220201'
+        predate = self.pre_bisday(self.DATE)  # 1/3が休日
+        self.CANDLE_WIDTH = 4
+
+        self.root = tkinter.Tk()
+        self.root.configure(bg='white')
+        self.root.geometry("1000x700")  # ウインドウサイズ（「幅x高さ」で指定）
+        # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
+        self.set_window_title(CODE)
+
+        frame_tool_bar = tkinter.Frame(self.root, borderwidth=2, relief=tkinter.SUNKEN)
         start_button = tkinter.Button(
             frame_tool_bar,
             text="スタート",
@@ -170,37 +202,37 @@ class Replay_Chart():
         draw_chart.bind("<ButtonPress>", self.draw_chart_click)
         frame_tool_bar.pack(fill=tkinter.X)
 
-        side_panel = tkinter.Frame(root, relief=tkinter.SUNKEN)
+        side_panel = tkinter.Frame(self.root, relief=tkinter.SUNKEN)
         # キャンバスエリア
-        canvas = tkinter.Canvas(side_panel, width=1000, height=450, bg='white')
-        self.canvas_layout(canvas)
-        canvas.pack()
+        self.canvas = tkinter.Canvas(side_panel, width=1000, height=450, bg='white')
+        self.canvas_layout(self.canvas)
+        self.canvas.pack()
 
         tree_column = ('buy_time', 'buy_value',
                     'sell_time', 'sell_value', 'profit', 'prof_rate')
-        tree = ttk.Treeview(side_panel)
-        tree['columns'] = tree_column
-        tree["show"] = "headings"
-        tree.column('buy_time', width=70)
-        tree.column('buy_value', width=70)
-        tree.column('sell_time', width=70)
-        tree.column('sell_value', width=70)
-        tree.column('profit', width=70)
-        tree.column('prof_rate', width=70)
-        tree.heading('buy_time', text='購入時刻')
-        tree.heading('buy_value', text='購入価格')
-        tree.heading('sell_time', text='売却時刻')
-        tree.heading('sell_value', text='売却価格')
-        tree.heading('profit', text='利益')
-        tree.heading('prof_rate', text='利益率')
-        tree.pack(side=tkinter.LEFT)
+        self.tree = ttk.Treeview(side_panel)
+        self.tree['columns'] = tree_column
+        self.tree["show"] = "headings"
+        self.tree.column('buy_time', width=70)
+        self.tree.column('buy_value', width=70)
+        self.tree.column('sell_time', width=70)
+        self.tree.column('sell_value', width=70)
+        self.tree.column('profit', width=70)
+        self.tree.column('prof_rate', width=70)
+        self.tree.heading('buy_time', text='購入時刻')
+        self.tree.heading('buy_value', text='購入価格')
+        self.tree.heading('sell_time', text='売却時刻')
+        self.tree.heading('sell_value', text='売却価格')
+        self.tree.heading('profit', text='利益')
+        self.tree.heading('prof_rate', text='利益率')
+        self.tree.pack(side=tkinter.LEFT)
 
         side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
-        draw_thread = threading.Thread(target=self.draw_p, args=(tree, canvas,
-                                                            CODE, DATE, CANDLE_WIDTH, PREDATE))
+        draw_thread = threading.Thread(target=self.draw_p, args=(self.tree, self.canvas,
+                                                            CODE, self.DATE, self.CANDLE_WIDTH, predate))
         draw_thread.start()
-        root.mainloop()
+        self.root.mainloop()
 
 
     def draw_p(self,tree, canvas, CODE, DATE, CANDLE_WIDTH, PREDATE):
