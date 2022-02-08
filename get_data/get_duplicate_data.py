@@ -17,20 +17,20 @@ import ctypes
 
 # todo:非同期にする
 
-CODE_LIST = ['9519', '9258', '9257', '9254', '9214','9213','9212', '9211', '9107','9101','9104',
+CODE_LIST = ['9519', '9258', '9257', '9254', '9214', '9213', '9212', '9211', '9107', '9101', '9104',
              '7133', '7383', '7370', '7254',
              '6554', '6524', '6522',
              '5759',
              '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
-             '3604','3936',
-             '2585', '2484', '2427','2345', '2158']
+             '3604', '3936',
+             '2585', '2484', '2438', '2427', '2345', '2195', '2158']
 
 
 def read_xlwings():
 
-    q=Queue()
-    p1=Process(target=get_step_value,args=(q,))
-    p2=Process(target=remove_dupulicate_p,args=(q,))
+    q = Queue()
+    p1 = Process(target=get_step_value, args=(q,))
+    p2 = Process(target=remove_dupulicate_p, args=(q,))
     # get_step_value(sheet)
     p1.start()
     p2.start()
@@ -79,9 +79,9 @@ def get_step_value(q):
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
     # 時間まで待ち
-    while datetime.today().time()<start_am:
+    while datetime.today().time() < start_am:
         time.sleep(10)
-        
+
     # 場中動く処理
     while start_am < datetime.today().time() < fin_pm:
         # 昼休憩
@@ -92,7 +92,8 @@ def get_step_value(q):
         time.sleep(0.5)
         # 銘柄ごとに動く処理
         for index, code in enumerate(CODE_LIST):
-            df_list[code] = pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
+            df_list[code] = pd.DataFrame(sheet.range(
+                (3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
         # 何も処理せずまとめてキューにぶち込む
         q.put(df_list)
 
@@ -103,7 +104,6 @@ def get_step_value(q):
     wb.close()
     app.kill()
     os.remove('data/RSS_step_value_reader.xlsx')
-
 
 
 def remove_dupulicate_p(q):
@@ -119,16 +119,17 @@ def remove_dupulicate_p(q):
     for code in CODE_LIST:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
-    n=0
+    n = 0
     while True:
         try:
             # 取り出し
             get_df_list = q.get(block=True, timeout=10)
-            n+=1
+            n += 1
             print("\r残キュー数:"+str(q.qsize())+" 回数:"+str(n)+"   ", end="")
             # 銘柄ごとに動く処理
             for index, code in enumerate(CODE_LIST):
-                df_list[code] = remove_duplicate(df_list[code],get_df_list[code])
+                df_list[code] = remove_duplicate(
+                    df_list[code], get_df_list[code])
         except queue.Empty:
             # print('\nタイムアウト')
             # ひけてたら終了
@@ -140,6 +141,7 @@ def remove_dupulicate_p(q):
 
     save_data(df_list)
 
+
 def save_data(data):
     # 歩みね保存
     today_str = datetime.today().strftime('%Y%m%d')
@@ -147,7 +149,8 @@ def save_data(data):
         data[code] = data[code].reset_index(drop=True)
         new_dir_path = 'data/'+today_str
         fname = new_dir_path+'/'+code+'.csv'
-        # fname = 'data/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
+        if os.path.isfile(fname):
+            fname = new_dir_path+'/_'+code+'.csv'
         try:
             os.makedirs(new_dir_path, exist_ok=True)
             data[code].to_csv(fname, encoding='cp932')
@@ -166,6 +169,7 @@ def save_data(data):
     #         print(code+e)
 
     print("保存完了")
+
 
 def test():
     # test = np.zeros((len(CODE_LIST), 1, 3))
