@@ -24,6 +24,7 @@ CODE_LIST = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
              '3604',
              '2585', '2484', '2427', '2345', '2158']
 
+
 def rpa_test():
     app, pid = start_ex.xw_apps_add_fixed()
     wb = app.books.add()
@@ -59,10 +60,13 @@ def main():
         print('エラー')
 
 
-def multiprocess_test():
+def multiprocess_test(): 
+    stocklist = pd.read_csv(
+    'data/code_list.csv', header=0, index_col=0, encoding='cp932',dtype=str)
+    codelist=stocklist['銘柄コード']
     q = Queue()
-    p1 = Process(target=process_in, args=(q,))
-    p2 = Process(target=process2_out, args=(q,))
+    p1 = Process(target=process_in, args=(q,codelist))
+    p2 = Process(target=process2_out, args=(q,codelist))
 
     print('start')
     p1.start()
@@ -73,13 +77,13 @@ def multiprocess_test():
     exit()
 
 
-def process_in(q):
+def process_in(q,codelist):
     app, pid = start_ex.xw_apps_add_fixed()
     # app.visible = False
     # hwnds = get_hwnds_for_pid(pid)
     wb = app.books.add()
     sheet = wb.sheets["Sheet1"]
-    for index, code in enumerate(CODE_LIST):
+    for index, code in enumerate(codelist):
         sheet.cells(2, 1+index*3).value = ["時刻", "出来高", "約定値"]
         sheet.cells(
             1, 1+index*3).value = "=@RssTickList(,\"" + code+".T\",100)"
@@ -93,14 +97,14 @@ def process_in(q):
         pyautogui.click(rect[0]+1520, rect[1]+100)
         pyautogui.click(rect[0]+50, rect[1]+200)
         time.sleep(3)
-    win32gui.ShowWindow(hwnd,6)
+    win32gui.ShowWindow(hwnd, 6)
 
     df_list = {}
-    for code in CODE_LIST:
+    for code in codelist:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
-    for i in range(100):
-        for index, code in enumerate(CODE_LIST):
+    for i in range(10):
+        for index, code in enumerate(codelist):
             df_list[code] = pd.DataFrame(sheet.range(
                 (3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
 
@@ -112,22 +116,22 @@ def process_in(q):
     os.remove('data/RSS_step_value_reader.xlsx')
 
 
-def process2_out(q):
+def process2_out(q,codelist):
     time.sleep(5)
     df_list = {}
-    for code in CODE_LIST:
+    for code in codelist:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
-    i=0
+    i = 0
     while True:
         try:
             # 取り出し
             get_df_list = q.get(block=True, timeout=3)
             # print('process2:'+str(i))
             print("\r残キュー数:"+str(q.qsize()), end="")
-            i+=1
+            i += 1
             # 銘柄ごとに動く処理
-            for index, code in enumerate(CODE_LIST):
+            for index, code in enumerate(codelist):
                 df_list[code] = remove_duplicate(
                     df_list[code], get_df_list[code])
                 # print(df_list)
@@ -137,7 +141,7 @@ def process2_out(q):
         except Exception as e:
             print(e)
 
-    for index, code in enumerate(CODE_LIST):
+    for index, code in enumerate(codelist):
         df_list[code] = df_list[code].reset_index(drop=True)
         today_str = datetime.today().strftime('%Y%m%d')
         try:
@@ -147,6 +151,7 @@ def process2_out(q):
         except Exception as e:
             print(code+':'+e)
 
+
 def while_test():
     while True:
         while False:
@@ -155,28 +160,58 @@ def while_test():
             break
     print('正常終了')
 
+
 def schedule_test():
     schedule.every().day.at("17:03").do(multiprocess_test)
     while True:
         schedule.run_pending()
         time.sleep(10)
 
-def save_codelist():
-    codelist = ['9519', '9258', '9257', '9254', '9212', '9211', '9107',
-                '7133', '7383', '7370', '7254',
-                '6554', '6524', '6522',
-                '5759',
-                '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
-                '3604',
-                '2585', '2484', '2427', '2345', '2158']
 
-    codename_list = pd.read_csv(
-        'data/code_list.csv', header=0, encoding='utf8')
-    try:
-        title = codename_list[codename_list['コード']
-                              == int(CODE)]['銘柄名'].values[0]
-    except IndexError:
-        title = '銘柄リストにない銘柄コード'
+def save_codelist():
+    codelist = ['9519', '9258', '9257', '9254', '9214', '9213', '9212', '9211', '9107', '9101', '9104',
+                '7133', '7383', '7370', '7254',
+                '6639', '6554', '6548', '6524', '6522',
+                '5759',
+                '4962', '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4267', '4259', '4125', '4014', '4080',
+                '3604', '3936',
+                '2585', '2484', '2438', '2427', '2345', '2195', '2158']
+
+    jpx_list = pd.read_csv(
+        'data/jpx_list.csv', header=0, encoding='utf8')
+    namelist = pd.DataFrame()
+    # namelist=namelist.append(['test'])
+    # namelist = namelist.append(['test2']).reset_index(drop=True).rename(columns={0:'銘柄名'})
+    # print(namelist)
+    for code in codelist:
+        try:
+            title = jpx_list[jpx_list['コード']
+                             == int(code)]['銘柄名'].values[0]
+        except IndexError:
+            title = '銘柄リストにない銘柄コード'
+        namelist = namelist.append([title])
+    namelist = namelist.reset_index(
+        drop=True).rename(columns={0: '銘柄名'})
+    code_name_list = pd.concat(
+        [pd.DataFrame(codelist, columns=['銘柄コード']), namelist],axis=1)
+    # print(code_name_list)
+    code_name_list.to_csv('data/code_list.csv', encoding='cp932')
+
+def list_test():
+    codelist = pd.read_csv(
+        'data/code_list.csv', header=0,index_col=0, encoding='cp932')
+    precodelist = ['9519', '9258', '9257', '9254', '9214', '9213', '9212', '9211', '9107', '9101', '9104',
+                '7133', '7383', '7370', '7254',
+                '6639', '6554', '6548', '6524', '6522',
+                '5759',
+                '4962', '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4267', '4259', '4125', '4014', '4080',
+                '3604', '3936',
+                '2585', '2484', '2438', '2427', '2345', '2195', '2158']
+
+    if precodelist:
+        print('同じ')
+
+
 
 if __name__ == '__main__':
     # main()
@@ -184,3 +219,5 @@ if __name__ == '__main__':
     multiprocess_test()
     # while_test()
     # schedule_test()
+    # save_codelist()
+    # list_test()

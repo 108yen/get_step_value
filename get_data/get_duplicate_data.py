@@ -17,20 +17,23 @@ import ctypes
 
 # todo:非同期にする
 
-CODE_LIST = ['9519', '9258', '9257', '9254', '9214', '9213', '9212', '9211', '9107', '9101', '9104',
-             '7133', '7383', '7370', '7254',
-             '6554', '6524', '6522',
-             '5759',
-             '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4259', '4125', '4080',
-             '3604', '3936',
-             '2585', '2484', '2438', '2427', '2345', '2195', '2158']
+# CODE_LIST = ['9519', '9258', '9257', '9254', '9214', '9213', '9212', '9211', '9107', '9101', '9104',
+#              '7133', '7383', '7370', '7254',
+#              '6639', '6554', '6548', '6524', '6522',
+#              '5759',
+#              '4962', '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4267', '4259', '4125', '4014', '4080',
+#              '3604', '3936',
+#              '2585', '2484', '2438', '2427', '2345', '2195', '2158']
 
 
 def read_xlwings():
+    stocklist = pd.read_csv(
+        'data/code_list.csv', header=0, index_col=0, encoding='cp932', dtype=str)
+    codelist = stocklist['銘柄コード']
 
     q = Queue()
-    p1 = Process(target=get_step_value, args=(q,))
-    p2 = Process(target=remove_dupulicate_p, args=(q,))
+    p1 = Process(target=get_step_value, args=(q, codelist))
+    p2 = Process(target=remove_dupulicate_p, args=(q, codelist))
     # get_step_value(sheet)
     p1.start()
     p2.start()
@@ -41,20 +44,20 @@ def read_xlwings():
     exit()
 
 
-def set_macro(sheet):
-    for index, code in enumerate(CODE_LIST):
+def set_macro(sheet, codelist):
+    for index, code in enumerate(codelist):
         sheet.cells(2, 1+index*3).value = ["時刻", "出来高", "約定値"]
         sheet.cells(
             1, 1+index*3).value = "=@RssTickList(,\"" + code+".T\",100)"
 
 
-def get_step_value(q):
+def get_step_value(q, codelist):
     # エクセル開いたりする処理
     app, pid = start_ex.xw_apps_add_fixed()
     # app.visible = False
     wb = app.books.add()
     sheet = wb.sheets["Sheet1"]
-    set_macro(sheet)
+    set_macro(sheet, codelist)
     wb.save('data/RSS_step_value_reader.xlsx')
 
     hwnd = win32gui.FindWindow(None, 'RSS_step_value_reader.xlsx - Excel')
@@ -75,7 +78,7 @@ def get_step_value(q):
 
     # dataframeを銘柄分作成（結構頭悪い処理）
     df_list = {}
-    for code in CODE_LIST:
+    for code in codelist:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
     # 時間まで待ち
@@ -91,7 +94,7 @@ def get_step_value(q):
             print('\nぬーん終わり')
         time.sleep(0.5)
         # 銘柄ごとに動く処理
-        for index, code in enumerate(CODE_LIST):
+        for index, code in enumerate(codelist):
             df_list[code] = pd.DataFrame(sheet.range(
                 (3, 1+index*3), (103, 3+index*3)).value, columns=["時刻", "出来高", "約定値"])
         # 何も処理せずまとめてキューにぶち込む
@@ -106,7 +109,7 @@ def get_step_value(q):
     os.remove('data/RSS_step_value_reader.xlsx')
 
 
-def remove_dupulicate_p(q):
+def remove_dupulicate_p(q, codelist):
     # Excel起動するまで待ち
     time.sleep(10)
     # 節目の時間
@@ -116,7 +119,7 @@ def remove_dupulicate_p(q):
     fin_pm = datetime.strptime("15:00:30", '%H:%M:%S').time()
     # dataframeを銘柄分作成（結構頭悪い処理）
     df_list = {}
-    for code in CODE_LIST:
+    for code in codelist:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
     n = 0
@@ -127,7 +130,7 @@ def remove_dupulicate_p(q):
             n += 1
             print("\r残キュー数:"+str(q.qsize())+" 回数:"+str(n)+"   ", end="")
             # 銘柄ごとに動く処理
-            for index, code in enumerate(CODE_LIST):
+            for index, code in enumerate(codelist):
                 df_list[code] = remove_duplicate(
                     df_list[code], get_df_list[code])
         except queue.Empty:
@@ -139,13 +142,13 @@ def remove_dupulicate_p(q):
         except Exception as e:
             print(e)
 
-    save_data(df_list)
+    save_data(df_list, codelist)
 
 
-def save_data(data):
+def save_data(data, codelist):
     # 歩みね保存
     today_str = datetime.today().strftime('%Y%m%d')
-    for code in CODE_LIST:
+    for code in codelist:
         data[code] = data[code].reset_index(drop=True)
         new_dir_path = 'data/'+today_str
         fname = new_dir_path+'/'+code+'.csv'

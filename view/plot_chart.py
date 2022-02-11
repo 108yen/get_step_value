@@ -29,7 +29,7 @@ class UpdateCanvas(threading.Thread):
         self.volume_rate = volume_rate
         self.max_val = max_val
         self.min_val = min_val
-        self.minutes_num = minutes_num+1  # 次の足から描画するので
+        self.minutes_num = minutes_num+1 if minutes_num!=0 else 0 # 次の足から描画するので
         self.stop_event = threading.Event()
         self.suspend_event = False
         self.buy_event = False
@@ -45,18 +45,6 @@ class UpdateCanvas(threading.Thread):
         self.buy_event = True
 
     def run(self):
-        # # 午前ぶん
-        # fname = self.code+'_'+self.date+'_1130.csv'
-        # input_fname = 'data/'+fname
-        # am_data = pd.read_csv(input_fname, header=0, index_col=0,
-        #                       encoding='cp932').iloc[::-1]
-        # # 午後ぶん
-        # fname = self.code+'_'+self.date+'_1500.csv'
-        # input_fname = 'data/'+fname
-        # pm_data = pd.read_csv(input_fname, header=0, index_col=0,
-        #                       encoding='cp932').iloc[::-1]
-        # pm_data = pm_data[pm_data['時刻'] > "11:30:00"]
-        # row_df = pd.concat([am_data, pm_data])
         # 午前午後分かれてないパターン
         fname = 'data/'+self.date+'/'+self.code+'.csv'
         row_df = pd.read_csv(fname, header=0, index_col=0,
@@ -65,7 +53,7 @@ class UpdateCanvas(threading.Thread):
         ini_val = int(row_df[:1]['約定値'].values[0])
         defy = 0
         # 範囲外だった場合倍率も変更する必要がある
-        if self.min_val > ini_val or ini_val > self.max_val:
+        if (self.min_val > ini_val or ini_val > self.max_val) and self.minutes_num!=0:
             pre_min_val = self.min_val
             if self.min_val > ini_val:
                 self.min_val = ini_val
@@ -86,7 +74,7 @@ class UpdateCanvas(threading.Thread):
         sum_volume = 0
         trading_price = 0
         vwap_sx, vwap_sy, vwap_fx, vwap_fy = self.canvas.coords(
-            'vwap'+str(self.minutes_num-1))
+            'vwap'+str(self.minutes_num-1)) if self.minutes_num!=0 else 0,200,0,200
         vwap_sx = vwap_fx
         vwap_sy = vwap_fy
         vwap_fx = 10+(3+self.candle_width) * \

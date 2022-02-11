@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, date
 from plot_chart import UpdateCanvas
 import plot_past_chart
 import jpholiday
+import os
 
 # todo：高値とか低値が狭まった時に倍率戻す処理
 # todo：５分足のデータも別途保存したい
@@ -27,8 +28,9 @@ class Oliginal_Holiday(jpholiday.OriginalHoliday):
     def _is_holiday_name(self, date):
         return '特別休暇'
 
+
 class Replay_Chart():
-    def stop_button_click(self,event):
+    def stop_button_click(self, event):
         self.uc.stop()
 
     def start_button_click(self, event):
@@ -41,7 +43,7 @@ class Replay_Chart():
     def buy_button_click(self, event):
         self.uc.buy()
 
-    def draw_chart_click(self,event):
+    def draw_chart_click(self, event):
         if self.uc.is_alive():
             self.uc.stop()
         # 消す処理
@@ -60,24 +62,26 @@ class Replay_Chart():
         in_str = self.code_box.get()
         if len(in_str) == 4 and in_str.isdecimal():
             # date=self.year_cb.get()+self.month_cb.get()+self.day_cb.get()
-            date=datetime(int(self.year_cb.get()),int(self.month_cb.get()),int(self.day_cb.get())).strftime('%Y%m%d')
-            self.set_window_title(in_str,date)
+            date = datetime(int(self.year_cb.get()), int(
+                self.month_cb.get()), int(self.day_cb.get())).strftime('%Y%m%d')
+            self.set_window_title(in_str, date)
             self.draw_p(self.tree, self.canvas,
                         self.code_box.get(), date, self.CANDLE_WIDTH, self.pre_bisday(date))
         else:
             print('入力コードの書式エラー')
         # print(self.code_box.get())
 
-
-    def canvas_layout(self,canvas):
+    def canvas_layout(self, canvas):
 
         # 出来高とチャートの分離線
         canvas.create_line(0, 450-150, 800, 450-150, tag='split0')
         canvas.create_line(730, 0, 730, 450, tag='split1')
         canvas.create_line(800, 0, 800, 450, tag='split2')
         canvas.create_text(830, 15, text='時刻', tag='label_time', font=('', 10))
-        canvas.create_text(880, 15, text='現在値', tag='label_value', font=('', 10))
-        canvas.create_text(930, 15, text='出来高', tag='label_volume', font=('', 10))
+        canvas.create_text(880, 15, text='現在値',
+                           tag='label_value', font=('', 10))
+        canvas.create_text(930, 15, text='出来高',
+                           tag='label_volume', font=('', 10))
         # canvas.create_line(853, 0, 853, 450, fill='#c0c0c0', tag='split3')
         # canvas.create_line(903, 0, 903, 450, fill='#c0c0c0', tag='split4')
         canvas.create_line(953, 0, 953, 450, fill='#c0c0c0', tag='split5')
@@ -95,7 +99,7 @@ class Replay_Chart():
         for i in range(1, (450-30)//20):  # 21個
             y = 30+20*i
             canvas.create_line(800, y, 953, y, fill='#c0c0c0',
-                            tag='step_vsplit'+str(i))
+                               tag='step_vsplit'+str(i))
         for i in range((450-30)//20):
             y = 40+20*i
             canvas.create_rectangle(
@@ -103,9 +107,9 @@ class Replay_Chart():
             canvas.create_text(
                 828, y, text='', tag='step_time'+str(i), font=('', 10))
             canvas.create_text(880, y, text='',
-                            tag='step_value'+str(i), font=('', 10))
+                               tag='step_value'+str(i), font=('', 10))
             canvas.create_text(930, y, text='',
-                            tag='step_volume'+str(i), font=('', 10))
+                               tag='step_volume'+str(i), font=('', 10))
         # 2%と4%の線
         self.canvas.create_line(0, 0, self.canvas.winfo_width(),
                                 0, width=1, fill='#3cb371', tag='two_per')
@@ -116,8 +120,7 @@ class Replay_Chart():
 
     # date=datetime.date
 
-
-    def is_bisday(self,in_date):
+    def is_bisday(self, in_date):
         # Date = datetime.date(int(DATE[0:4]), int(DATE[4:6]), int(DATE[6:8]))
         if in_date.weekday() >= 5 or jpholiday.is_holiday(in_date):
             return False
@@ -127,29 +130,27 @@ class Replay_Chart():
     # in:date=string "yyyymmdd"
     # out:string "yyyymmdd"
 
-
-    def pre_bisday(self,in_date):
+    def pre_bisday(self, in_date):
         tmp_date = date(int(in_date[0:4]), int(in_date[4:6]),
                         int(in_date[6:8]))-timedelta(days=1)
         while not self.is_bisday(tmp_date):
             tmp_date = tmp_date-timedelta(days=1)
         return tmp_date.strftime('%Y%m%d')
 
-    def set_window_title(self,code,date):
+    def set_window_title(self, code, date):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         codename_list = pd.read_csv(
-            'data/code_list.csv', header=0, encoding='utf8')
+            'data/jpx_list.csv', header=0, encoding='utf8')
         try:
             title = code+' '+codename_list[codename_list['コード']
-                                  == int(code)]['銘柄名'].values[0]+'    '+date
+                                           == int(code)]['銘柄名'].values[0]+'    '+date
         except IndexError:
             title = '銘柄リストにない銘柄コード'
         self.root.title(title)
 
-
     def __init__(self):
-        CODE = '7370'
-        DATE = '20220202'
+        CODE = '4267'
+        DATE = '20220210'
         predate = self.pre_bisday(DATE)  # 1/3が休日
         self.CANDLE_WIDTH = 4
 
@@ -157,9 +158,10 @@ class Replay_Chart():
         self.root.configure(bg='white')
         self.root.geometry("1000x700")  # ウインドウサイズ（「幅x高さ」で指定）
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
-        self.set_window_title(CODE,DATE)
+        self.set_window_title(CODE, DATE)
 
-        frame_tool_bar = tkinter.Frame(self.root, borderwidth=2, relief=tkinter.SUNKEN)
+        frame_tool_bar = tkinter.Frame(
+            self.root, borderwidth=2, relief=tkinter.SUNKEN)
         start_button = tkinter.Button(
             frame_tool_bar,
             text="スタート",
@@ -192,18 +194,18 @@ class Replay_Chart():
         )
         buy_button.pack(side='right')
         buy_button.bind("<ButtonPress>", self.buy_button_click)
-        code_label=tkinter.Label(frame_tool_bar,text='銘柄コード:')
+        code_label = tkinter.Label(frame_tool_bar, text='銘柄コード:')
         code_label.pack(side='left')
         self.code_box = tkinter.Entry(
             frame_tool_bar,
             width=5,
         )
-        self.code_box.pack(side='left',padx=4)
-        self.year_cb=tkinter.ttk.Combobox(
+        self.code_box.pack(side='left', padx=4)
+        self.year_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
             width=5,
-            values=('2022','2021')
-            )
+            values=('2022', '2021')
+        )
         self.year_cb.current(0)
         self.year_cb.pack(side='left')
         year_label = tkinter.Label(frame_tool_bar, text='年')
@@ -211,7 +213,7 @@ class Replay_Chart():
         self.month_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
             width=2,
-            values=tuple(range(1,13))
+            values=tuple(range(1, 13))
         )
         self.month_cb.current(int(datetime.today().strftime('%m'))-1)
         self.month_cb.pack(side='left')
@@ -238,12 +240,13 @@ class Replay_Chart():
 
         side_panel = tkinter.Frame(self.root, relief=tkinter.SUNKEN)
         # キャンバスエリア
-        self.canvas = tkinter.Canvas(side_panel, width=1000, height=450, bg='white')
+        self.canvas = tkinter.Canvas(
+            side_panel, width=1000, height=450, bg='white')
         self.canvas_layout(self.canvas)
         self.canvas.pack()
 
         tree_column = ('buy_time', 'buy_value',
-                    'sell_time', 'sell_value', 'profit', 'prof_rate')
+                       'sell_time', 'sell_value', 'profit', 'prof_rate')
         self.tree = ttk.Treeview(side_panel)
         self.tree['columns'] = tree_column
         self.tree["show"] = "headings"
@@ -264,17 +267,23 @@ class Replay_Chart():
         side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
         draw_thread = threading.Thread(target=self.draw_p, args=(self.tree, self.canvas,
-                                                            CODE, DATE, self.CANDLE_WIDTH, predate))
+                                                                 CODE, DATE, self.CANDLE_WIDTH, predate))
         draw_thread.start()
         self.root.mainloop()
 
-
-    def draw_p(self,tree, canvas, CODE, DATE, CANDLE_WIDTH, PREDATE):
+    def draw_p(self, tree, canvas, code, DATE, CANDLE_WIDTH, predate):
         # キャンバスを動かすやつ
-        candle_rate, volume_rate, max_val, min_val, index = \
-            plot_past_chart.plot(canvas, CODE, PREDATE)
-        self.uc = UpdateCanvas(tree, canvas, CODE, DATE, CANDLE_WIDTH,
-                        candle_rate, volume_rate, max_val, min_val, index)
+        if os.path.isfile('data/'+predate+'/'+code+'.csv'):
+            candle_rate, volume_rate, max_val, min_val, index = \
+                plot_past_chart.plot(canvas, code, predate)
+        else:
+            candle_rate=1
+            volume_rate=1
+            max_val=0
+            min_val=999999
+            index=0
+        self.uc = UpdateCanvas(tree, canvas, code, DATE, CANDLE_WIDTH,
+                               candle_rate, volume_rate, max_val, min_val, index)
 
 
 if __name__ == '__main__':
