@@ -140,9 +140,9 @@ class Replay_Chart():
     def set_window_title(self, code, date):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         codename_list = pd.read_csv(
-            'data/jpx_list.csv', header=0, encoding='utf8')
+            'data/code_list.csv', header=0, index_col=0, encoding='cp932')
         try:
-            title = code+' '+codename_list[codename_list['コード']
+            title = code+' '+codename_list[codename_list['銘柄コード']
                                            == int(code)]['銘柄名'].values[0]+'    '+date
         except IndexError:
             title = '銘柄リストにない銘柄コード'
