@@ -59,14 +59,14 @@ class Replay_Chart():
         for i in range(102):
             for item in ['line', 'rect', 'sell_volume', 'buy_volume', 'vwap']:
                 self.canvas.delete(item+str(i))
-        in_str = self.code_box.get()
+        in_str = self.codelist_cb.get()[:4]
         if len(in_str) == 4 and in_str.isdecimal():
             # date=self.year_cb.get()+self.month_cb.get()+self.day_cb.get()
             date = datetime(int(self.year_cb.get()), int(
                 self.month_cb.get()), int(self.day_cb.get())).strftime('%Y%m%d')
             self.set_window_title(in_str, date)
             self.draw_p(self.tree, self.canvas,
-                        self.code_box.get(), date, self.CANDLE_WIDTH, self.pre_bisday(date))
+                        in_str, date, self.CANDLE_WIDTH, self.pre_bisday(date))
         else:
             print('入力コードの書式エラー')
         # print(self.code_box.get())
@@ -196,11 +196,20 @@ class Replay_Chart():
         buy_button.bind("<ButtonPress>", self.buy_button_click)
         code_label = tkinter.Label(frame_tool_bar, text='銘柄コード:')
         code_label.pack(side='left')
-        self.code_box = tkinter.Entry(
+        # self.code_box = tkinter.Entry(
+        #     frame_tool_bar,
+        #     width=5,
+        # )
+        # self.code_box.pack(side='left', padx=4)
+        codename_list = pd.read_csv(
+            'data/code_list.csv', header=0, index_col=0, encoding='cp932',dtype=str)
+        view_codelist=codename_list['銘柄コード']+' '+codename_list['銘柄名']
+        self.codelist_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
-            width=5,
+            width=10,
+            values=tuple(view_codelist)
         )
-        self.code_box.pack(side='left', padx=4)
+        self.codelist_cb.pack(side='left', padx=4)
         self.year_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
             width=5,

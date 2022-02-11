@@ -74,7 +74,7 @@ class UpdateCanvas(threading.Thread):
         sum_volume = 0
         trading_price = 0
         vwap_sx, vwap_sy, vwap_fx, vwap_fy = self.canvas.coords(
-            'vwap'+str(self.minutes_num-1)) if self.minutes_num!=0 else 0,200,0,200
+            'vwap'+str(self.minutes_num-1)) if self.minutes_num != 0 else (0, 200, 0, 200)
         vwap_sx = vwap_fx
         vwap_sy = vwap_fy
         vwap_fx = 10+(3+self.candle_width) * \
