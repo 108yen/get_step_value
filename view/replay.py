@@ -10,6 +10,7 @@ from plot_chart import UpdateCanvas
 import plot_past_chart
 import jpholiday
 import os
+import locale
 
 # todo：高値とか低値が狭まった時に倍率戻す処理
 # todo：５分足のデータも別途保存したい
@@ -137,13 +138,16 @@ class Replay_Chart():
             tmp_date = tmp_date-timedelta(days=1)
         return tmp_date.strftime('%Y%m%d')
 
-    def set_window_title(self, code, date):
+    def set_window_title(self, code, in_date):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         codename_list = pd.read_csv(
             'data/code_list.csv', header=0, index_col=0, encoding='cp932')
         try:
+            locale.setlocale(locale.LC_TIME, 'Japanese_Japan.932')
+            print(locale.getlocale(locale.LC_TIME))
+            out_date=date(int(in_date[0:4]), int(in_date[4:6]), int(in_date[6:8])).strftime('%Y-%m-%d (%a)')
             title = code+' '+codename_list[codename_list['銘柄コード']
-                                           == int(code)]['銘柄名'].values[0]+'    '+date
+                                           == int(code)]['銘柄名'].values[0]+'    '+out_date
         except IndexError:
             title = '銘柄リストにない銘柄コード'
         self.root.title(title)
@@ -206,7 +210,7 @@ class Replay_Chart():
         view_codelist=codename_list['銘柄コード']+' '+codename_list['銘柄名']
         self.codelist_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
-            width=10,
+            width=15,
             values=tuple(view_codelist)
         )
         self.codelist_cb.pack(side='left', padx=4)
