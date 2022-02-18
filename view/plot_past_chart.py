@@ -53,10 +53,8 @@ def split_five_min_data(code: str, date: str):
             # ひとつ前の値が終値
             fin = row_df[index-1:index]['約定値'].values[0]
             vwap = trading_price/sum_volume
-            five_min_data = five_min_data.append(
-                pd.Series([split5m.strftime('%H:%M:%S'), first, fin, max, min, buy_vol, sell_vol, volume, vwap],
-                          index=five_min_data.columns),
-                ignore_index=True)
+            five_min_data = pd.concat([five_min_data,pd.DataFrame([[split5m.strftime('%H:%M:%S'), first, fin, max, min, buy_vol, sell_vol, volume, vwap]],
+                        columns=five_min_data.columns)],ignore_index=True)
             # データ初期化
             max = value
             min = value
@@ -87,10 +85,8 @@ def split_five_min_data(code: str, date: str):
     # 最後のデータを投入する
     fin = row_df[-1:]['約定値'].values[0]
     vwap = trading_price/sum_volume
-    five_min_data = five_min_data.append(
-        pd.Series([split5m.strftime('%H:%M:%S'), first, fin, max, min, buy_vol, sell_vol, volume, vwap],
-                  index=five_min_data.columns),
-        ignore_index=True)
+    five_min_data = pd.concat([five_min_data,pd.DataFrame([[split5m.strftime('%H:%M:%S'), first, fin, max, min, buy_vol, sell_vol, volume, vwap]],
+                columns=five_min_data.columns)],ignore_index=True)
 
     return five_min_data
 

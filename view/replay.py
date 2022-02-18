@@ -14,8 +14,8 @@ import locale
 
 # todo：高値とか低値が狭まった時に倍率戻す処理
 # todo：５分足のデータも別途保存したい
-# todo：クラスにする
-# todo:GUI上で銘柄入力とかしたい
+# todo:日足表示したい
+# todo:ティックチャート
 
 # 祝日を独自に追加
 
@@ -144,7 +144,6 @@ class Replay_Chart():
             'data/code_list.csv', header=0, index_col=0, encoding='cp932')
         try:
             locale.setlocale(locale.LC_TIME, 'Japanese_Japan.932')
-            print(locale.getlocale(locale.LC_TIME))
             out_date=date(int(in_date[0:4]), int(in_date[4:6]), int(in_date[6:8])).strftime('%Y-%m-%d (%a)')
             title = code+' '+codename_list[codename_list['銘柄コード']
                                            == int(code)]['銘柄名'].values[0]+'    '+out_date

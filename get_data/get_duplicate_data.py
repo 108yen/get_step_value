@@ -6,42 +6,41 @@ import start_ex
 from get_hwnds_for_pid import get_hwnds_for_pid
 import pandas as pd
 from datetime import datetime
+from datetime import date
 import schedule
 from remove_duplicate_data import remove_duplicate
 import os
 import win32gui
 import pyautogui
 import ctypes
+import jpholiday
 
-# from ..view.plot_past_chart import split_five_min_data
+class Oliginal_Holiday(jpholiday.OriginalHoliday):
+    def _is_holiday(self, DATE):
+        if DATE == date(2022, 1, 3):
+            return True
+        return False
 
-# todo:非同期にする
-
-# CODE_LIST = ['9519', '9258', '9257', '9254', '9214', '9213', '9212', '9211', '9107', '9101', '9104',
-#              '7133', '7383', '7370', '7254',
-#              '6639', '6554', '6548', '6524', '6522',
-#              '5759',
-#              '4962', '4599', '4591', '4418', '4417', '4414', '4412', '4260', '4261', '4263', '4264', '4265', '4267', '4259', '4125', '4014', '4080',
-#              '3604', '3936',
-#              '2585', '2484', '2438', '2427', '2345', '2195', '2158']
-
+    def _is_holiday_name(self, date):
+        return '特別休暇'
 
 def read_xlwings():
-    stocklist = pd.read_csv(
-        'data/code_list.csv', header=0, index_col=0, encoding='cp932', dtype=str)
-    codelist = stocklist['銘柄コード']
+    if not jpholiday.is_holiday(date.today()):
+        stocklist = pd.read_csv(
+            'data/code_list.csv', header=0, index_col=0, encoding='cp932', dtype=str)
+        codelist = stocklist['銘柄コード']
 
-    q = Queue()
-    p1 = Process(target=get_step_value, args=(q, codelist))
-    p2 = Process(target=remove_dupulicate_p, args=(q, codelist))
-    # get_step_value(sheet)
-    p1.start()
-    p2.start()
-    p1.join()
-    print('\np1終了')
-    p2.join()
-    print('p2終了')
-    exit()
+        q = Queue()
+        p1 = Process(target=get_step_value, args=(q, codelist))
+        p2 = Process(target=remove_dupulicate_p, args=(q, codelist))
+        # get_step_value(sheet)
+        p1.start()
+        p2.start()
+        p1.join()
+        print('\np1終了')
+        p2.join()
+        print('p2終了')
+        exit()
 
 
 def set_macro(sheet, codelist):
@@ -215,7 +214,11 @@ def main():
     # while True:
     #     schedule.run_pending()
     #     time.sleep(10)
-    read_xlwings()
+    try:
+        read_xlwings()
+    except Exception as e:
+        f = open('data/log.txt', 'a', encoding='cp932')
+        f.write(e)
 
 
 if __name__ == '__main__':

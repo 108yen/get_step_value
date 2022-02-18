@@ -3,6 +3,7 @@ from logging import exception
 import queue
 import time
 import pandas as pd
+import pywintypes
 import win32gui
 import win32con
 import win32process
@@ -13,6 +14,9 @@ from multiprocessing import Queue
 import os
 import schedule
 import ctypes
+# import cudf
+# from numba import cuda
+import numpy as np
 
 from get_data.remove_duplicate_data import remove_duplicate
 
@@ -211,7 +215,14 @@ def list_test():
     if precodelist:
         print('同じ')
 
+def get_cwd():
+    f = open('data/test_out.txt', 'a', encoding='cp932')
+    f.write(os.getcwd())
 
+def cuda_test():
+    df = cudf.DataFrame()
+    df['in1'] = np.arange(1000, dtype=np.float64)
+    print(df)
 
 if __name__ == '__main__':
     # main()
@@ -221,3 +232,5 @@ if __name__ == '__main__':
     # schedule_test()
     # save_codelist()
     # list_test()
+    # get_cwd()
+    # cuda_test()
