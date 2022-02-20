@@ -255,11 +255,12 @@ class UpdateCanvas(threading.Thread):
             candle_fy = defy-gap*self.candle_rate
             linex = candle_sx+self.candle_width//2
             # 2%と4%の線の処理
-            two_per_y = defy-(contract_price*1.02-ini_val) * self.candle_rate
-            four_per = contract_price*1.04
-            four_per_y = defy-(contract_price*1.04-ini_val)*self.candle_rate
-            self.canvas.coords('two_per', 10, two_per_y, 790, two_per_y)
-            self.canvas.coords('four_per', 10, four_per_y, 790, four_per_y)
+            if buy_val == -1:
+                two_per_y = defy-(contract_price*1.02-ini_val) * self.candle_rate
+                four_per = contract_price*1.04
+                four_per_y = defy-(contract_price*1.04-ini_val)*self.candle_rate
+                self.canvas.coords('two_per', 10, two_per_y, 790, two_per_y)
+                self.canvas.coords('four_per', 10, four_per_y, 790, four_per_y)
             # 出来高表示の処理
             if pre_value < contract_price:
                 buy_dir = True

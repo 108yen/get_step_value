@@ -205,7 +205,7 @@ class Replay_Chart():
         # )
         # self.code_box.pack(side='left', padx=4)
         codename_list = pd.read_csv(
-            'data/code_list.csv', header=0, index_col=0, encoding='cp932',dtype=str)
+            'data/code_list.csv', header=0, index_col=0, encoding='cp932',dtype=str).sort_values('銘柄コード')
         view_codelist=codename_list['銘柄コード']+' '+codename_list['銘柄名']
         self.codelist_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
