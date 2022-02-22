@@ -10,6 +10,7 @@ from datetime import date
 import schedule
 from remove_duplicate_data import remove_duplicate
 import os
+import pywintypes
 import win32gui
 import pyautogui
 import ctypes
@@ -27,7 +28,7 @@ class Oliginal_Holiday(jpholiday.OriginalHoliday):
 def read_xlwings():
     if not jpholiday.is_holiday(date.today()):
         stocklist = pd.read_csv(
-            'data/code_list.csv', header=0, index_col=0, encoding='cp932', dtype=str)
+            'data/code_list.csv', header=0, encoding='cp932', dtype=str)
         codelist = stocklist['銘柄コード']
 
         q = Queue()

@@ -66,7 +66,7 @@ def main():
 
 def multiprocess_test(): 
     stocklist = pd.read_csv(
-    'data/code_list.csv', header=0, index_col=0, encoding='cp932',dtype=str)
+    'data/code_list.csv', header=0, encoding='cp932',dtype=str)
     codelist=stocklist['銘柄コード']
     q = Queue()
     p1 = Process(target=process_in, args=(q,codelist))
@@ -100,7 +100,7 @@ def process_in(q,codelist):
         ctypes.windll.user32.SetForegroundWindow(hwnd)
         pyautogui.click(rect[0]+1520, rect[1]+100)
         pyautogui.click(rect[0]+50, rect[1]+200)
-        time.sleep(3)
+        time.sleep(5)
     win32gui.ShowWindow(hwnd, 6)
 
     df_list = {}
@@ -121,7 +121,7 @@ def process_in(q,codelist):
 
 
 def process2_out(q,codelist):
-    time.sleep(5)
+    time.sleep(10)
     df_list = {}
     for code in codelist:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
@@ -154,6 +154,7 @@ def process2_out(q,codelist):
                                  '/'+str(code)+'.csv', encoding='cp932')
         except Exception as e:
             print(code+':'+e)
+    print('保存完了')
 
 
 def while_test():

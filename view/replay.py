@@ -141,7 +141,7 @@ class Replay_Chart():
     def set_window_title(self, code, in_date):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         codename_list = pd.read_csv(
-            'data/code_list.csv', header=0, index_col=0, encoding='cp932')
+            'data/code_list.csv', header=0, encoding='cp932')
         try:
             locale.setlocale(locale.LC_TIME, 'Japanese_Japan.932')
             out_date=date(int(in_date[0:4]), int(in_date[4:6]), int(in_date[6:8])).strftime('%Y-%m-%d (%a)')
@@ -205,7 +205,7 @@ class Replay_Chart():
         # )
         # self.code_box.pack(side='left', padx=4)
         codename_list = pd.read_csv(
-            'data/code_list.csv', header=0, index_col=0, encoding='cp932',dtype=str).sort_values('銘柄コード')
+            'data/code_list.csv', header=0, encoding='cp932',dtype=str).sort_values('銘柄コード')
         view_codelist=codename_list['銘柄コード']+' '+codename_list['銘柄名']
         self.codelist_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
