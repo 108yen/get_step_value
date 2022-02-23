@@ -225,13 +225,50 @@ def cuda_test():
     df['in1'] = np.arange(1000, dtype=np.float64)
     print(df)
 
+def all_code_get_test():    #!500銘柄が限界
+    stocklist = pd.read_csv(
+    'data/all_code_list.csv', header=0, encoding='utf8',dtype=str)
+    codelist=stocklist['銘柄コード']
+
+    app, pid = start_ex.xw_apps_add_fixed()
+    # app.visible = False
+    # hwnds = get_hwnds_for_pid(pid)
+    wb = app.books.add()
+    sheet = wb.sheets["Sheet1"]
+    for index, code in enumerate(codelist):
+        sheet.cells(
+                1+index, 1).value = "=@RssMarket(" + code+",\"歩み1詳細時刻\")"
+        sheet.cells(
+                1+index, 2).value = "=@RssMarket(" + code+",\"歩み1\")"
+        sheet.cells(
+                1+index, 3).value = "=@RssMarket(" + code+",\"出来高\")"
+        # sheet.cells(1, 1+index*3).value = ["時刻", "出来高", "約定値"]
+        # for i in range(1,5):
+        #     sheet.cells(
+        #         1+i, 1+index*3).value = "=@RSS|\'" + code+".T\'!歩み"+str(i)+"詳細時刻"
+        # for i in range(1,5):
+        #     sheet.cells(
+        #         1+i, 3+index*3).value = "=@RSS|\'" + code+".T\'!歩み"+str(i)
+    # wb.save('data/RSS_step_value_reader.xlsx')
+
+    # hwnd = win32gui.FindWindow(None, 'RSS_step_value_reader.xlsx - Excel')
+    # while sheet.cells(3, 1).value is None:
+    #     print('RSS接続再試行')
+    #     rect = win32gui.GetWindowRect(hwnd)
+    #     ctypes.windll.user32.SetForegroundWindow(hwnd)
+    #     pyautogui.click(rect[0]+1520, rect[1]+100)
+    #     pyautogui.click(rect[0]+50, rect[1]+200)
+    #     time.sleep(5)
+    # win32gui.ShowWindow(hwnd, 6)
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
-    multiprocess_test()
+    # multiprocess_test()
     # while_test()
     # schedule_test()
     # save_codelist()
     # list_test()
     # get_cwd()
     # cuda_test()
+    all_code_get_test()
