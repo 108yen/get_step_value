@@ -1,13 +1,13 @@
-from datetime import datetime
+import datetime
 from logging import exception
 import queue
 import time
 import pandas as pd
-import pywintypes
-import win32gui
-import win32con
-import win32process
-import pyautogui
+# import pywintypes
+# import win32gui
+# import win32con
+# import win32process
+# import pyautogui
 from get_data import start_ex
 from multiprocessing import Process
 from multiprocessing import Queue
@@ -17,6 +17,10 @@ import ctypes
 # import cudf
 # from numba import cuda
 import numpy as np
+from sqlalchemy import create_engine
+import mysql.connector
+import glob
+from tqdm import tqdm
 
 from get_data.remove_duplicate_data import remove_duplicate
 
@@ -147,7 +151,7 @@ def process2_out(q,codelist):
 
     for index, code in enumerate(codelist):
         df_list[code] = df_list[code].reset_index(drop=True)
-        today_str = datetime.today().strftime('%Y%m%d')
+        today_str = datetime.datetime.today().strftime('%Y%m%d')
         try:
             os.makedirs('data/test/'+today_str, exist_ok=True)
             df_list[code].to_csv('data/test/'+today_str +
@@ -261,6 +265,49 @@ def all_code_get_test():    #!500銘柄が限界
     #     time.sleep(5)
     # win32gui.ShowWindow(hwnd, 6)
 
+# 今までのデータをdbにぶち込んでみる
+def dbtest():
+    engine = create_engine(
+        'mysql+mysqlconnector://root:test@127.0.0.1/testsb')
+    df = pd.read_sql_query('SELECT * FROM codelist', con=engine)
+    # print(df)
+
+    # filelist = glob.glob('data/202202[12][0-9]')
+    # filelist.extend(glob.glob('data/2022020[89]'))
+    # print(filelist)
+    filelist = glob.glob('data/202202[12][0-9]/*.csv')
+    filelist.extend(glob.glob('data/2022020[89]/*.csv'))
+    for filepath in tqdm(filelist):
+        stepdf = pd.read_csv(filepath, header=0, index_col=0,
+                                      encoding='cp932')
+        stepdf.rename(columns={'時刻': 'time', '約定値': 'value',
+                      '出来高': 'volume'}, inplace=True)
+        datestr=filepath[5:13]
+        stepdf['date']=datetime.date(int(datestr[:4]),int(datestr[4:6]),int(datestr[6:]))
+        stepdf['dayindex']=stepdf.index
+        stepdf['code']=int(filepath[14:18])
+        to_time=lambda x:datetime.time(int(x[:2]),int(x[3:5]),int(x[6:8]))
+        stepdf['time']=stepdf['time'].apply(to_time)
+        try:
+            stepdf.to_sql('testtb', engine, if_exists='append', index=None)
+        except Exception as e:
+            f = open('data/test_out.txt', 'a', encoding='cp932')
+            f.write(e)
+
+
+    # 差分表示用
+    # stocklist = pd.read_csv(
+    #     'data/code_list.csv', header=0, encoding='cp932', dtype=str)
+    # codelist = stocklist['銘柄コード']
+    # s=set()
+    # for day in ['20220225', '20220224', '20220222', '20220221', '20220218']:
+    #     for filename in glob.glob('data/'+day+'/*csv'):
+    #         if not filename.split('/')[2][:4] in codelist.values:
+    #             s.add(filename.split('/')[2][:4])
+                
+    # print(s)
+    
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
@@ -271,4 +318,5 @@ if __name__ == '__main__':
     # list_test()
     # get_cwd()
     # cuda_test()
-    all_code_get_test()
+    # all_code_get_test()
+    dbtest()
