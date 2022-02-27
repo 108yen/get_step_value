@@ -319,7 +319,8 @@ def db_search_test():
         if not code in get_df.values:
             out_df=pd.concat([out_df,codelist_df[codelist_df['code']==code]], ignore_index=True)
     print(out_df)
-
+# todo:codelistに全銘柄リストぶち込みたい
+# todo:取得日付とかもDBで管理できるとよい？
 
 if __name__ == '__main__':
     # main()

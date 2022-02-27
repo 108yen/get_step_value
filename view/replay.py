@@ -11,6 +11,9 @@ import plot_past_chart
 import jpholiday
 import os
 import locale
+from sqlalchemy import create_engine
+import mysql.connector
+import db_conf
 
 # todo：高値とか低値が狭まった時に倍率戻す処理
 # todo：５分足のデータも別途保存したい
@@ -205,9 +208,15 @@ class Replay_Chart():
         #     width=5,
         # )
         # self.code_box.pack(side='left', padx=4)
-        codename_list = pd.read_csv(
-            'data/code_list.csv', header=0, encoding='cp932',dtype=str).sort_values('銘柄コード')
-        view_codelist=codename_list['銘柄コード']+' '+codename_list['銘柄名']
+        try:
+            engine = create_engine(
+                'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
+            codename_list = pd.read_sql_query('SELECT * FROM codelist', con=engine)
+            view_codelist=codename_list['code']+' '+codename_list['name']
+        except Exception as e:
+            codename_list = pd.read_csv(
+                'data/code_list.csv', header=0, encoding='cp932',dtype=str).sort_values('銘柄コード')
+            view_codelist=codename_list['銘柄コード']+' '+codename_list['銘柄名']
         self.codelist_cb = tkinter.ttk.Combobox(
             frame_tool_bar,
             width=15,

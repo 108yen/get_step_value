@@ -6,3 +6,4 @@ data/
 conf.py
 test_conf.py
 get_data/db_conf.py
+view/db_conf.py
