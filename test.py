@@ -21,6 +21,7 @@ from sqlalchemy import create_engine
 import mysql.connector
 import glob
 from tqdm import tqdm
+import test_conf
 
 from get_data.remove_duplicate_data import remove_duplicate
 
@@ -267,9 +268,11 @@ def all_code_get_test():    #!500銘柄が限界
 
 # 今までのデータをdbにぶち込んでみる
 def dbtest():
+    # engine = create_engine(
+    #     'mysql+mysqlconnector://root:test@127.0.0.1/testsb')
     engine = create_engine(
-        'mysql+mysqlconnector://root:test@127.0.0.1/testsb')
-    df = pd.read_sql_query('SELECT * FROM codelist', con=engine)
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    # df = pd.read_sql_query('SELECT * FROM codelist', con=engine)
     # print(df)
 
     # filelist = glob.glob('data/202202[12][0-9]')
@@ -289,7 +292,7 @@ def dbtest():
         to_time=lambda x:datetime.time(int(x[:2]),int(x[3:5]),int(x[6:8]))
         stepdf['time']=stepdf['time'].apply(to_time)
         try:
-            stepdf.to_sql('testtb', engine, if_exists='append', index=None)
+            stepdf.to_sql('step', engine, if_exists='append', index=None)
         except Exception as e:
             f = open('data/test_out.txt', 'a', encoding='cp932')
             f.write(e)
@@ -306,7 +309,17 @@ def dbtest():
     #             s.add(filename.split('/')[2][:4])
                 
     # print(s)
-    
+def db_search_test():
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    get_df = pd.read_sql_query('SELECT code FROM step WHERE (`date` IN (\'2022-02-25\')) AND (dayindex IN (0))', con=engine)
+    codelist_df=pd.read_sql_query('SELECT * FROM codelist', con=engine)
+    out_df=pd.DataFrame(columns=["code","name"])
+    for code in codelist_df['code']:
+        if not code in get_df.values:
+            out_df=pd.concat([out_df,codelist_df[codelist_df['code']==code]], ignore_index=True)
+    print(out_df)
+
 
 if __name__ == '__main__':
     # main()
@@ -319,4 +332,6 @@ if __name__ == '__main__':
     # get_cwd()
     # cuda_test()
     # all_code_get_test()
-    dbtest()
+    # dbtest()
+    # db_search_test()
+    print(type(datetime.date.today()))

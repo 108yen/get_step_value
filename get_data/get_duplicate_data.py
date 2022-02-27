@@ -5,8 +5,7 @@ import time
 import start_ex
 from get_hwnds_for_pid import get_hwnds_for_pid
 import pandas as pd
-from datetime import datetime
-from datetime import date
+import datetime
 import schedule
 from remove_duplicate_data import remove_duplicate
 import os
@@ -15,10 +14,15 @@ import win32gui
 import pyautogui
 import ctypes
 import jpholiday
+from sqlalchemy import create_engine
+import mysql.connector
+from tqdm import tqdm
+import db_conf
+
 
 class Oliginal_Holiday(jpholiday.OriginalHoliday):
     def _is_holiday(self, DATE):
-        if DATE == date(2022, 1, 3):
+        if DATE == datetime.date(2022, 1, 3):
             return True
         return False
 
@@ -26,7 +30,7 @@ class Oliginal_Holiday(jpholiday.OriginalHoliday):
         return '特別休暇'
 
 def read_xlwings():
-    if not jpholiday.is_holiday(date.today()):
+    if not jpholiday.is_holiday(datetime.date.today()):
         stocklist = pd.read_csv(
             'data/code_list.csv', header=0, encoding='cp932', dtype=str)
         codelist = stocklist['銘柄コード']
@@ -71,10 +75,10 @@ def get_step_value(q, codelist):
     win32gui.ShowWindow(hwnd, 6)
 
     # n = 0
-    start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
-    fin_am = datetime.strptime("11:30:30", '%H:%M:%S').time()
-    start_pm = datetime.strptime("12:20:00", '%H:%M:%S').time()
-    fin_pm = datetime.strptime("15:00:30", '%H:%M:%S').time()
+    start_am = datetime.datetime.strptime("08:59:00", '%H:%M:%S').time()
+    fin_am = datetime.datetime.strptime("11:30:30", '%H:%M:%S').time()
+    start_pm = datetime.datetime.strptime("12:20:00", '%H:%M:%S').time()
+    fin_pm = datetime.datetime.strptime("15:00:30", '%H:%M:%S').time()
 
     # dataframeを銘柄分作成（結構頭悪い処理）
     df_list = {}
@@ -82,13 +86,13 @@ def get_step_value(q, codelist):
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
 
     # 時間まで待ち
-    while datetime.today().time() < start_am:
+    while datetime.datetime.today().time() < start_am:
         time.sleep(10)
 
     # 場中動く処理
-    while start_am < datetime.today().time() < fin_pm:
+    while start_am < datetime.datetime.today().time() < fin_pm:
         # 昼休憩
-        if fin_am < datetime.today().time() < start_pm:
+        if fin_am < datetime.datetime.today().time() < start_pm:
             print('\nヌーン')
             time.sleep(3000)
             print('\nぬーん終わり')
@@ -113,10 +117,10 @@ def remove_dupulicate_p(q, codelist):
     # Excel起動するまで待ち
     time.sleep(10)
     # 節目の時間
-    start_am = datetime.strptime("08:59:00", '%H:%M:%S').time()
-    fin_am = datetime.strptime("11:30:30", '%H:%M:%S').time()
-    start_pm = datetime.strptime("12:20:00", '%H:%M:%S').time()
-    fin_pm = datetime.strptime("15:00:30", '%H:%M:%S').time()
+    start_am = datetime.datetime.strptime("08:59:00", '%H:%M:%S').time()
+    fin_am = datetime.datetime.strptime("11:30:30", '%H:%M:%S').time()
+    start_pm = datetime.datetime.strptime("12:20:00", '%H:%M:%S').time()
+    fin_pm = datetime.datetime.strptime("15:00:30", '%H:%M:%S').time()
     # dataframeを銘柄分作成（結構頭悪い処理）
     df_list = {}
     for code in codelist:
@@ -136,7 +140,7 @@ def remove_dupulicate_p(q, codelist):
         except queue.Empty:
             # print('\nタイムアウト')
             # ひけてたら終了
-            if datetime.today().time() > fin_pm:
+            if datetime.datetime.today().time() > fin_pm:
                 print('処理終了')
                 break
         except Exception as e:
@@ -147,8 +151,8 @@ def remove_dupulicate_p(q, codelist):
 
 def save_data(data, codelist):
     # 歩みね保存
-    today_str = datetime.today().strftime('%Y%m%d')
-    for code in codelist:
+    today_str = datetime.datetime.today().strftime('%Y%m%d')
+    for code in tqdm(codelist):
         data[code] = data[code].reset_index(drop=True)
         new_dir_path = 'data/'+today_str
         fname = new_dir_path+'/'+code+'.csv'
@@ -159,6 +163,36 @@ def save_data(data, codelist):
             data[code].to_csv(fname, encoding='cp932')
         except Exception as e:
             print(code+':'+e)
+    print('csv保存完了')
+
+    # raspidbに送る処理
+    try:
+        engine = create_engine(
+            'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
+    except Exception as e:
+        print(e)
+        f = open('data/test_out.txt', 'a', encoding='cp932')
+        f.write(e)
+        f.close()
+
+    for code in tqdm(codelist):
+        stepdf = data[code].reset_index(drop=True)
+        stepdf.rename(columns={'時刻': 'time', '約定値': 'value',
+                      '出来高': 'volume'}, inplace=True)
+        stepdf['date']=datetime.date.today()
+        stepdf['dayindex']=stepdf.index
+        stepdf['code']=int(code)
+        to_time=lambda x:datetime.time(int(x[:2]),int(x[3:5]),int(x[6:8]))
+        stepdf['time']=stepdf['time'].apply(to_time)
+        try:
+            stepdf.to_sql('step', engine, if_exists='append', index=None)
+        except Exception as e:
+            f = open('data/test_out.txt', 'a', encoding='cp932')
+            f.write('error:'+code)
+            f.write(e)
+            f.close()
+    print('db送信完了')
+
     # 5分足データの保存
     # for code in CODE_LIST:
     #     new_dir_path = 'data/'+today_str+'/5min'
@@ -171,50 +205,9 @@ def save_data(data, codelist):
     #     except (FileNotFoundError, FileExistsError) as e:
     #         print(code+e)
 
-    print("保存完了")
-
-
-def test():
-    # test = np.zeros((len(CODE_LIST), 1, 3))
-    # print(test)
-    # test[0, :, :] = np.append(test[0, :, :], [[1, 1, 1]], axis=0)
-    # print(test)
-    app = start_ex.xw_apps_add_fixed()
-    # app.visible = False
-    wb = app.books.add()
-    sheet = wb.sheets["Sheet1"]
-    set_macro(sheet)  # dataframeを銘柄分作成（結構頭悪い処理）
-    df_list = {}
-    for code in CODE_LIST:
-        df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
-
-    # # 場中動く処理
-    # while start_am < datetime.today().time() < fin_am or\
-    #         start_pm < datetime.today().time() < fin_pm:
-    time.sleep(1)
-    # 銘柄ごとに動く処理
-    for index, code in enumerate(CODE_LIST):
-        df_list[code] = df_list[code].append(pd.DataFrame(sheet.range((3, 1+index*3), (103, 3+index*3)).value, columns=[
-            "時刻", "出来高", "約定値"]))
-    # duplicates_df = duplicates_df.append(pd.DataFrame(sheet.range('A3:C103').value, columns=[
-    #     "時刻", "出来高", "約定値"]))
-
-    # 保存
-    for code in CODE_LIST:
-        df_list[code] = df_list[code].reset_index(drop=True)
-        fname = 'data/test/'+code+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
-        df_list[code].to_csv(fname, encoding='cp932')
-    # duplicates_df = duplicates_df.reset_index(drop=True)
-    # fname = 'data/'+CODE_LIST+'_'+datetime.today().strftime('%Y%m%d_%H%M')+'.csv'
-    # duplicates_df.to_csv(fname, encoding='cp932')
-    print("保存完了")
-
+    # print("保存完了")
 
 def main():
-    # schedule.every().day.at("08:59").do(read_xlwings)
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(10)
     try:
         read_xlwings()
     except Exception as e:

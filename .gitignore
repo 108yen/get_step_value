@@ -3,3 +3,6 @@
 __pycache__/
 data/
 .DS_Store
+conf.py
+test_conf.py
+get_data/db_conf.py
