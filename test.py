@@ -312,7 +312,7 @@ def dbtest():
 def db_search_test():
     engine = create_engine(
         'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
-    get_df = pd.read_sql_query('SELECT code FROM step WHERE (`date` IN (\'2022-02-25\')) AND (dayindex IN (0))', con=engine)
+    get_df = pd.read_sql_query('SELECT code FROM step WHERE (`date` IN (\'2022-02-28\')) AND (dayindex IN (0))', con=engine)
     codelist_df=pd.read_sql_query('SELECT * FROM codelist', con=engine)
     out_df=pd.DataFrame(columns=["code","name"])
     for code in codelist_df['code']:
@@ -321,6 +321,48 @@ def db_search_test():
     print(out_df)
 # todo:codelistに全銘柄リストぶち込みたい
 # todo:取得日付とかもDBで管理できるとよい？
+
+def db_priv_test():
+    # test_df=pd.DataFrame(np.arange(12).reshape(3, 4),
+    #               columns=['col_0', 'col_1', 'col_2', 'col_3'],
+    #               index=['row_0', 'row_1', 'row_2'])
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    try:
+        # test_df.to_sql('test', engine, if_exists='append', index=None)
+        print(pd.read_sql_query('SELECT concat(cast(date as char),\' \',cast(time as char)) AS datetime,volume,value FROM step WHERE date=\'2022-03-02\' AND code=2158 ORDER BY dayindex ASC', \
+            con=engine,\
+                parse_dates={'datetime':'%Y-%m-%d %H:%M:%S'}
+            )['datetime'][:1])
+    except Exception as e:
+        print(e)
+
+def db_input_getday():
+    filelist = glob.glob('data/202202[12][0-9]/*.csv')
+    filelist.extend(glob.glob('data/2022020[89]/*.csv'))
+    filelist.extend(glob.glob('data/202203[0-9][0-9]/*.csv'))
+
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    getdate_df = pd.DataFrame(columns=['date','code'])
+    for filepath in filelist:
+        split_path=filepath.split('\\')
+        getdate=datetime.date(int(split_path[1][0:4]),int(split_path[1][4:6]),int(split_path[1][6:8]))
+        code=split_path[2].split('.')[0]
+        getdate_df=pd.concat([getdate_df,pd.DataFrame([[getdate,code]],columns=['date','code'])], ignore_index=True)
+    # print(getdate_df)
+    getdate_df.to_sql('getdate', engine, if_exists='append', index=None)
+
+def convert_test():
+    stocklist = pd.read_csv(
+        'data/code_list.csv', header=0, encoding='cp932', dtype=str)
+    # codelist = stocklist[['銘柄コード']].astype('int')
+    codelist = stocklist['銘柄コード']
+    getlist_df=pd.DataFrame({'code':codelist})
+    getlist_df['code']=getlist_df['code'].astype('int')
+    # codelist.rename(columns={'銘柄コード':'code'}, inplace=True)
+    getlist_df['date']=datetime.date.today()
+    print(getlist_df.dtypes)
 
 if __name__ == '__main__':
     # main()
@@ -335,4 +377,6 @@ if __name__ == '__main__':
     # all_code_get_test()
     # dbtest()
     # db_search_test()
-    print(type(datetime.date.today()))
+    # db_priv_test()
+    # db_input_getday()
+    convert_test()

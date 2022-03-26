@@ -191,6 +191,12 @@ def save_data(data, codelist):
             f.write('error:'+code)
             f.write(e)
             f.close()
+
+    # 今日取得した銘柄を記録
+    getlist_df=pd.DataFrame({'code':codelist})
+    getlist_df['code']=getlist_df['code'].astype('int')
+    getlist_df['date']=datetime.date.today()
+    getlist_df.to_sql('getdate', engine, if_exists='append', index=None)
     print('db送信完了')
 
     # 5分足データの保存

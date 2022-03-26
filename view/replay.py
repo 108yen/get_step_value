@@ -164,6 +164,7 @@ class Replay_Chart():
         self.root.configure(bg='white')
         self.root.geometry("1000x700")  # ウインドウサイズ（「幅x高さ」で指定）
         self.root.bind("<Return>",self.buy_button_click)
+        self.root.bind("<space>",self.suspend_button_click)
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         self.set_window_title(CODE, DATE)
 

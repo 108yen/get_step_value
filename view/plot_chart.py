@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 import math
 
-from xarray import concat
+# from xarray import concat
 
 """
 ファイルを読み込んでcanvasにチャートを描画
