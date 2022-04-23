@@ -213,8 +213,9 @@ class Replay_Chart():
             engine = create_engine(
                 'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
             codename_list = pd.read_sql_query('SELECT * FROM codelist', con=engine)
-            view_codelist=codename_list['code']+' '+codename_list['name']
+            view_codelist=codename_list['code'].astype(str)+' '+codename_list['name']
         except Exception as e:
+            print('dberror:'+str(e))
             codename_list = pd.read_csv(
                 'data/code_list.csv', header=0, encoding='cp932',dtype=str).sort_values('銘柄コード')
             view_codelist=codename_list['銘柄コード']+' '+codename_list['銘柄名']

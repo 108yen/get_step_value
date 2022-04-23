@@ -6,6 +6,10 @@ import win32con
 import ctypes
 import time
 import os
+from sqlalchemy import create_engine
+import mysql.connector
+import db_conf
+import pandas as pd
 # import pyautogui
 
 # todo:データ取得してくれるやつ
@@ -41,7 +45,10 @@ class Dailychart():
     #     win32gui.ShowWindow(hwnd, 6)
 
     def is_exist_dailydata(self,code,date):
-        print('bool')
+        engine = create_engine(
+                'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
+        daydata = pd.read_sql_query('SELECT * FROM daily WHERE code='+code+' AND date='+date, con=engine)
+        return len(daydata)!=0
 
     def get_dailydata(self,code,date):
     # エクセル開いたりする処理

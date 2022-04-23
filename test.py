@@ -2,6 +2,7 @@ import datetime
 from logging import exception
 import queue
 import time
+from matplotlib.pyplot import get
 import pandas as pd
 # import pywintypes
 # import win32gui
@@ -364,6 +365,54 @@ def convert_test():
     getlist_df['date']=datetime.date.today()
     print(getlist_df.dtypes)
 
+def forgot_data():
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    # filepath='data/20220330/9219.csv'
+    # stepdf = pd.read_csv(filepath, header=0, index_col=0,
+    #                                 encoding='cp932')
+    # stepdf.rename(columns={'時刻': 'time', '約定値': 'value',
+    #                 '出来高': 'volume'}, inplace=True)
+    # datestr=filepath[5:13]
+    # stepdf['date']=datetime.date(int(datestr[:4]),int(datestr[4:6]),int(datestr[6:]))
+    # stepdf['dayindex']=stepdf.index
+    # stepdf['code']=int(filepath[14:18])
+    # to_time=lambda x:datetime.time(int(x[:2]),int(x[3:5]),int(x[6:8]))
+    # stepdf['time']=stepdf['time'].apply(to_time)
+    # try:
+    #     stepdf.to_sql('step', engine, if_exists='append', index=None)
+    # except Exception as e:
+    #     f = open('data/test_out.txt', 'a', encoding='cp932')
+    #     f.write(e)
+    
+    stocklist = pd.read_csv(
+        'data/code_list.csv', header=0, encoding='cp932', dtype=str)
+    codelist = stocklist['銘柄コード']
+    getlist_df=pd.DataFrame({'code':codelist})
+    getlist_df['code']=getlist_df['code'].astype('int')
+    getlist_df['date']=datetime.date.today()
+    getlist_df.to_sql('getdate', engine, if_exists='append', index=None)
+    print('db送信完了')
+
+def analysys_sakureisu():
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    get_df = pd.read_sql_query('SELECT concat(cast(date as char),\' \',cast(time as char)) AS datetime,value,volume FROM step WHERE (`date` IN (\'2022-04-15\')) AND (code=5029) ORDER BY dayindex ASC', \
+        con=engine, parse_dates={'datetime':'%Y-%m-%d %H:%M:%S'})
+    get_df['trading_price']=get_df['value']*get_df['volume']
+    # df_sum=get_df[get_df['datetime']<datetime.datetime(2022,4,15,9,15)].sum()
+    tmp_df=get_df[datetime.datetime(2022,4,15,13,10)<get_df['datetime']]
+    df_sum=tmp_df[tmp_df['datetime']<datetime.datetime(2022,4,15,13,25)].sum()
+    print(df_sum['volume'])
+
+    # sum_volume=0
+    # for index,data in get_df.iloc[::-1].iterrows():
+    #     # print(data)
+    #     sum_volume+=data['volume']
+    #     if sum_volume>8200000:
+    #         print(data['datetime'])
+    #         break
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
@@ -379,4 +428,6 @@ if __name__ == '__main__':
     # db_search_test()
     # db_priv_test()
     # db_input_getday()
-    convert_test()
+    # convert_test()
+    # forgot_data()
+    analysys_sakureisu()
