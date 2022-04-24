@@ -42,10 +42,19 @@ class Tick_Chart():
         self.volumelist=[float(0)]*self.barnum
         self.pvalue=0
         self.buylist=[True]*self.barnum
+        self.valuelist=[float(0)]*self.barnum
+        for i in range(self.barnum):
+            self.canvas.create_line(2.5*(i+1),80,2.5*(i+2),80,tag='value_line'+str(i))
 
     def update_tickchart(self,value: float,volume: float):
-
-        print('')
+        self.valuelist.append(value)
+        del self.valuelist[0]
+        self.maxvalue=max(self.valuelist)
+        self.minvalue=min(self.valuelist)
+        if self.maxvalue-self.minvalue<1000:
+            self.valueX=self.height/1000
+        else:
+            self.valueX=self.height/(self.maxvalue-self.minvalue)
 
     def update_volumechart(self,value: float,volume: float):
         self.volumelist.append(volume)
