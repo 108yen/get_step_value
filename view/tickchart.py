@@ -21,19 +21,33 @@ class Tick_Chart():
     def __init__(self,canvas: tkinter.Canvas,root: tkinter.Tk):
         # 倍率を管理する変数
         self.height=150
-        self.heighvolume=float(1000)
-        self.volumeX=(self.height/2)/self.heighvolume   #上下1000株で初期化
-        self.valueX=1000
+        self.maxvolume=float(1000)
+        self.volumeX=(self.height/2)/self.maxvolume   #上下1000株で初期化
+        self.maxvalue=1000
+        self.minvalue=0
+        self.valueX=self.height/(self.maxvalue-self.minvalue)
         self.canvas=canvas
-        self.canvas.create_line(0, 80, 1000, 80, tag='center_line',fill='#c0c0c0')
-        for i in range(200):
+        self.canvas.create_line(0, 80, 950, 80, tag='center_line',fill='#c0c0c0')
+        self.canvas.create_line(0, 155, 950, 155, tag='under_line1',fill='#c0c0c0')
+        self.canvas.create_text(970,155, tag='under_line1_text',text='-1000')
+        self.canvas.create_line(0, 117.5, 950, 117.5, tag='under_line2',fill='#c0c0c0')
+        self.canvas.create_text(970,117.5,tag='under_line2_text',text='-500')
+        self.canvas.create_line(0, 5, 950, 5, tag='over_line1',fill='#c0c0c0')
+        self.canvas.create_text(970,5, tag='over_line1_text',text='1000')
+        self.canvas.create_line(0, 42.5, 950, 42.5, tag='over_line2',fill='#c0c0c0')
+        self.canvas.create_text(970,42.5,tag='over_line2_text',text='500')
+        self.barnum=190
+        for i in range(self.barnum):
             self.canvas.create_rectangle(5*i,80,5*(i+1),80,tag='volumebar'+str(i))
-        self.volumelist=[float(0)]*200
+        self.volumelist=[float(0)]*self.barnum
         self.pvalue=0
-        self.buylist=[True]*200
-        # self.canvas_buf=tkinter.Canvas(root, width=1000, height=160, bg='white')
+        self.buylist=[True]*self.barnum
 
-    def update_chart(self,value: float,volume: float):
+    def update_tickchart(self,value: float,volume: float):
+
+        print('')
+
+    def update_volumechart(self,value: float,volume: float):
         self.volumelist.append(volume)
         del self.volumelist[0]
         if self.pvalue<value:
@@ -46,19 +60,21 @@ class Tick_Chart():
         self.pvalue=value
         # 倍率処理
         maxvolume=max(self.volumelist)
-        if volume>self.heighvolume:
-            self.heighvolume=volume
-            self.volumeX=(self.height/2)/self.heighvolume
-        elif maxvolume!=self.heighvolume:
-            self.heighvolume=maxvolume
-            self.volumeX=(self.height/2)/self.heighvolume
+        if maxvolume!=self.maxvolume:
+            self.maxvolume=maxvolume
+            self.volumeX=(self.height/2)/self.maxvolume
+            self.canvas.itemconfig('under_line1_text',text='-'+str(self.maxvolume))
+            self.canvas.itemconfig('under_line2_text',text='-'+str(self.maxvolume/2))
+            self.canvas.itemconfig('over_line1_text',text=str(self.maxvolume))
+            self.canvas.itemconfig('over_line2_text',text=str(self.maxvolume/2))
 
-        for i in range(200):
+        for i in range(self.barnum):
             h=self.volumelist[i]*self.volumeX
             h=h if self.buylist[i] else -h
             self.canvas.coords('volumebar'+str(i),5*i,80-h,5*(i+1),80)
             color='red' if self.buylist[i] else 'blue'
             self.canvas.itemconfig('volumebar'+str(i), fill=color)
+
 
 # テスト用
 def test_roop(tc:Tick_Chart,root:tkinter.Tk,canvas:tkinter.Canvas):
@@ -66,7 +82,7 @@ def test_roop(tc:Tick_Chart,root:tkinter.Tk,canvas:tkinter.Canvas):
                             encoding='cp932').iloc[::-1].reset_index(drop=True)
     for index, data in tqdm(row_df.iterrows()):
         root.title(data['時刻'])
-        tc.update_chart(data['約定値'],data['出来高'])
+        tc.update_volumechart(data['約定値'],data['出来高'])
         canvas.update()
         # root.after(1,self.update_chart,args=(value,volume))
         # canvas.after(0,tc.update_chart(data['約定値'],data['出来高']))
