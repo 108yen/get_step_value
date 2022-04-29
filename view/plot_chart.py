@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from tqdm import tqdm
 import math
+import tickchart
 
 # from xarray import concat
 
@@ -34,6 +35,7 @@ class UpdateCanvas(threading.Thread):
         self.suspend_event = False
         self.buy_event = False
         self.setDaemon(True)
+        self.tchart=tickchart.Tick_Chart(canvas,0,452)
 
     def stop(self):
         self.stop_event.set()
@@ -123,13 +125,14 @@ class UpdateCanvas(threading.Thread):
         for index, data in row_df.iterrows():
             # 停止一時停止の処理
             if self.stop_event.is_set():
+                self.tchart.delete()
                 print('stop')
                 break
             if self.suspend_event:
                 while self.suspend_event:
                     time.sleep(0.1)
             time.sleep(0.01)
-            # time.sleep(1)
+            self.tchart.update_volumechart(data['約定値'],data['出来高'])
             contract_price = int(data['約定値'])
             # 購入した際の処理
             if self.buy_event:
