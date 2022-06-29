@@ -64,7 +64,14 @@ class Replay_Chart():
             for item in ['line', 'rect', 'sell_volume', 'buy_volume', 'vwap']:
                 self.canvas.delete(item+str(i))
         in_str = self.codelist_cb.get()[:4]
-        if len(in_str) == 4 and in_str.isdecimal():
+        if self.random_bln.get():
+            r_pick=self.tick_filter(5000)
+            code_str=str(r_pick['code'].iloc[0])
+            date=r_pick['date'].dt.strftime('%Y%m%d').iloc[0]
+            self.set_window_title(code_str, date)
+            self.draw_p(self.tree, self.canvas,
+                        code_str, date, self.CANDLE_WIDTH, self.pre_bisday(date))
+        elif len(in_str) == 4 and in_str.isdecimal():
             # date=self.year_cb.get()+self.month_cb.get()+self.day_cb.get()
             date = datetime(int(self.year_cb.get()), int(
                 self.month_cb.get()), int(self.day_cb.get())).strftime('%Y%m%d')
@@ -74,6 +81,12 @@ class Replay_Chart():
         else:
             print('入力コードの書式エラー')
         # print(self.code_box.get())
+    def tick_filter(self,tick:int):
+        engine = create_engine(
+            'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
+        code_list=pd.read_sql_query('SELECT * FROM getdate WHERE tick > '+str(tick),con=engine, parse_dates={'date':'%Y-%m-%d'})
+
+        return code_list.sample()
 
     def canvas_layout(self, canvas):
 
@@ -261,6 +274,14 @@ class Replay_Chart():
         )
         draw_chart.pack(side='left')
         draw_chart.bind("<ButtonPress>", self.draw_chart_click)
+        self.random_bln=tkinter.BooleanVar()
+        self.random_bln.set(True)
+        random_rdo = tkinter.Checkbutton(
+            frame_tool_bar,
+            variable=self.random_bln,
+            text="ランダム",
+        )
+        random_rdo.pack(side='left')
         frame_tool_bar.pack(fill=tkinter.X)
 
         side_panel = tkinter.Frame(self.root, relief=tkinter.SUNKEN)

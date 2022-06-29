@@ -443,6 +443,13 @@ def get_step_value(code:int,date:str):
         con=engine, parse_dates={'datetime':'%Y-%m-%d %H:%M:%S'})
     return get_df
 
+def tick_filter(tick:int):
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    code_list=pd.read_sql_query('SELECT * FROM getdate WHERE tick > '+str(tick),con=engine, parse_dates={'date':'%Y-%m-%d'})
+
+    print(code_list.sample())
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
@@ -461,4 +468,5 @@ if __name__ == '__main__':
     # convert_test()
     # forgot_data()
     # analysys_sakureisu()
-    get_tick()
+    # get_tick()
+    tick_filter(5000)
