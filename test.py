@@ -413,6 +413,36 @@ def analysys_sakureisu():
     #         print(data['datetime'])
     #         break
 
+def get_tick():
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    get_date=pd.read_sql_query('SELECT * FROM getdate',con=engine, parse_dates={'date':'%Y-%m-%d'})
+    # print(get_date)
+    tick_df = pd.DataFrame(columns=['date','code','tick'])
+    for index,data in tqdm(get_date.iterrows(),total=len(get_date)):
+        # step_data=get_step_value(data['code'],data['date'].strftime('%Y-%m-%d'))
+        fname='E:/Program/trade/get_step_value/data/'+data['date'].strftime('%Y%m%d')+'/'+str(data['code'])+'.csv'
+        step_data=pd.read_csv(fname, header=0,index_col=0, encoding='cp932')
+        tick_df=pd.concat([tick_df,pd.DataFrame([[data['date'].strftime('%Y-%m-%d'),data['code'],len(step_data)]],columns=['date','code','tick'])], ignore_index=True)
+    # step_data=get_step_value(2158,'2022-02-09')
+    # print(step_data[:1]['MAX(dayindex)'][0])
+    # tick_df.to_csv('data/tick.csv', encoding='cp932')
+    # tick_df.to_sql('getdate', engine, if_exists='replace', index=None)
+
+    # fname='E:/Program/trade/get_step_value/data/20220209/2158.csv'
+    # step_data=pd.read_csv(fname, header=0,index_col=0, encoding='cp932')
+    # print(len(step_data))
+    test_df=tick_df[['date','code']]
+    test_df=pd.concat([test_df,tick_df['tick']],axis=1)
+    print(test_df)
+
+def get_step_value(code:int,date:str):
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    get_df = pd.read_sql_query('SELECT MAX(dayindex) FROM step WHERE (`date` IN (\''+date+'\')) AND (code='+str(code)+')', \
+        con=engine, parse_dates={'datetime':'%Y-%m-%d %H:%M:%S'})
+    return get_df
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
@@ -430,4 +460,5 @@ if __name__ == '__main__':
     # db_input_getday()
     # convert_test()
     # forgot_data()
-    analysys_sakureisu()
+    # analysys_sakureisu()
+    get_tick()

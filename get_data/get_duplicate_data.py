@@ -175,6 +175,7 @@ def save_data(data, codelist):
         f.write(e)
         f.close()
 
+    tick_df = pd.DataFrame(columns=['tick'])
     for code in tqdm(codelist):
         stepdf = data[code].reset_index(drop=True)
         stepdf.rename(columns={'時刻': 'time', '約定値': 'value',
@@ -191,11 +192,13 @@ def save_data(data, codelist):
             f.write('error:'+code)
             f.write(e)
             f.close()
+        tick_df=pd.concat([tick_df,pd.DataFrame([[len(stepdf)]],columns=['tick'])], ignore_index=True)
 
     # 今日取得した銘柄を記録
     getlist_df=pd.DataFrame({'code':codelist})
     getlist_df['code']=getlist_df['code'].astype('int')
     getlist_df['date']=datetime.date.today()
+    getlist_df=pd.concat([getlist_df,tick_df['tick']],axis=1)
     getlist_df.to_sql('getdate', engine, if_exists='append', index=None)
     print('db送信完了')
 
