@@ -85,8 +85,9 @@ class Replay_Chart():
         engine = create_engine(
             'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
         code_list=pd.read_sql_query('SELECT * FROM getdate WHERE tick > '+str(tick),con=engine, parse_dates={'date':'%Y-%m-%d'})
+        remove_list=[9984,9101,9104,9107]
 
-        return code_list.sample()
+        return code_list.query('code not in @remove_list').sample()
 
     def canvas_layout(self, canvas):
 
@@ -157,13 +158,17 @@ class Replay_Chart():
 
     def set_window_title(self, code, in_date):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
-        codename_list = pd.read_csv(
-            'data/code_list.csv', header=0, encoding='cp932')
+        # codename_list = pd.read_csv(
+        #     'data/code_list.csv', header=0, encoding='cp932')
+        
+        engine = create_engine(
+            'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
+        codename_list=pd.read_sql_query('SELECT * FROM codelist',con=engine)
         try:
             locale.setlocale(locale.LC_TIME, 'Japanese_Japan.932')
             out_date=date(int(in_date[0:4]), int(in_date[4:6]), int(in_date[6:8])).strftime('%Y-%m-%d (%a)')
-            title = code+' '+codename_list[codename_list['銘柄コード']
-                                           == int(code)]['銘柄名'].values[0]+'    '+out_date
+            title = code+' '+codename_list[codename_list['code']
+                                           == int(code)]['name'].values[0]+'    '+out_date
         except IndexError:
             title = '銘柄リストにない銘柄コード'
         self.root.title(title)

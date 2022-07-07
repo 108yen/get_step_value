@@ -450,6 +450,70 @@ def tick_filter(tick:int):
 
     print(code_list.sample())
 
+def save_tick():
+    filelist = glob.glob('data/2022062[4-9]/*.csv')
+    filelist.extend(glob.glob('data/2022063[0-9]/*.csv'))
+
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    getdate_df = pd.DataFrame(columns=['date','code','tick'])
+    for filepath in filelist:
+        split_path=filepath.split('\\')
+        print(split_path)
+        getdate=datetime.date(int(split_path[1][0:4]),int(split_path[1][4:6]),int(split_path[1][6:8]))
+        code=int(split_path[2].split('.')[0])
+        fname='E:/Program/trade/get_step_value/data/'+getdate.strftime('%Y%m%d')+'/'+str(code)+'.csv'
+        step_data=pd.read_csv(fname, header=0,index_col=0, encoding='cp932')
+        getdate_df=pd.concat([getdate_df,pd.DataFrame([[getdate,code,len(step_data)]],columns=['date','code','tick'])], ignore_index=True)
+    # print(getdate_df)
+    getdate_df.to_sql('getdate', engine, if_exists='append', index=None)
+
+def save_error_step():
+    filelist = []
+    for code in [4575,9227,9229,7794,5033,9552,2437,9553,9554]:
+        filelist.extend(glob.glob('data/2022062[4-9]/'+str(code)+'.csv'))
+        filelist.extend(glob.glob('data/2022063[0-9]/'+str(code)+'.csv'))
+
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    for filepath in tqdm(filelist):
+        split_path=filepath.split('\\')
+        # print(split_path)
+        getdate=datetime.date(int(split_path[1][0:4]),int(split_path[1][4:6]),int(split_path[1][6:8]))
+        code=int(split_path[2].split('.')[0])
+        fname='E:/Program/trade/get_step_value/data/'+getdate.strftime('%Y%m%d')+'/'+str(code)+'.csv'
+        
+        step_data=pd.read_csv(fname, header=0,index_col=0, encoding='cp932')
+        step_data.rename(columns={'時刻': 'time', '約定値': 'value',
+                      '出来高': 'volume'}, inplace=True)
+        step_data['date']=getdate
+        step_data['dayindex']=step_data.index
+        step_data['code']=int(code)
+        to_time=lambda x:datetime.time(int(x[:2]),int(x[3:5]),int(x[6:8]))
+        step_data['time']=step_data['time'].apply(to_time)
+        step_data.to_sql('step', engine, if_exists='append', index=None)
+
+def auto_add_codelist():
+    stocklist = pd.read_csv(
+            'data/code_list.csv', header=0, encoding='cp932', dtype=str)
+    stocklist.rename(columns={'銘柄名': 'name', '銘柄コード': 'code'}, inplace=True)
+    stocklist['code']=stocklist['code'].astype('int')
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    db_stocklist=pd.read_sql_query('SELECT * FROM codelist',con=engine)
+
+    try:
+        stocklist[~stocklist['code'].isin(db_stocklist['code'])].to_sql('codelist', engine, if_exists='append', index=None)
+    except Exception as e:
+        f = open('data/test_out.txt', 'a', encoding='cp932')
+        f.write('tick write error')
+        f.write(str(e))
+        f.close()
+    
+
+
+
+
 if __name__ == '__main__':
     # main()
     # rpa_test()
@@ -469,4 +533,7 @@ if __name__ == '__main__':
     # forgot_data()
     # analysys_sakureisu()
     # get_tick()
-    tick_filter(5000)
+    # tick_filter(5000)
+    # save_tick()
+    # save_error_step()
+    auto_add_codelist()

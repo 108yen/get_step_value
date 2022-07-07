@@ -172,9 +172,10 @@ def save_data(data, codelist):
     except Exception as e:
         print(e)
         f = open('data/test_out.txt', 'a', encoding='cp932')
-        f.write(e)
+        f.write(str(e))
         f.close()
 
+    auto_add_codelist() #codelistにないやつ追加
     tick_df = pd.DataFrame(columns=['tick'])
     for code in tqdm(codelist):
         stepdf = data[code].reset_index(drop=True)
@@ -190,7 +191,7 @@ def save_data(data, codelist):
         except Exception as e:
             f = open('data/test_out.txt', 'a', encoding='cp932')
             f.write('error:'+code)
-            f.write(e)
+            f.write(str(e))
             f.close()
         tick_df=pd.concat([tick_df,pd.DataFrame([[len(stepdf)]],columns=['tick'])], ignore_index=True)
 
@@ -199,7 +200,13 @@ def save_data(data, codelist):
     getlist_df['code']=getlist_df['code'].astype('int')
     getlist_df['date']=datetime.date.today()
     getlist_df=pd.concat([getlist_df,tick_df['tick']],axis=1)
-    getlist_df.to_sql('getdate', engine, if_exists='append', index=None)
+    try:
+        getlist_df.to_sql('getdate', engine, if_exists='append', index=None)
+    except Exception as e:
+        f = open('data/test_out.txt', 'a', encoding='cp932')
+        f.write('tick write error')
+        f.write(str(e))
+        f.close()
     print('db送信完了')
 
     # 5分足データの保存
@@ -216,12 +223,31 @@ def save_data(data, codelist):
 
     # print("保存完了")
 
+def auto_add_codelist():
+    stocklist = pd.read_csv(
+            'data/code_list.csv', header=0, encoding='cp932', dtype=str)
+    stocklist.rename(columns={'銘柄名': 'name', '銘柄コード': 'code'}, inplace=True)
+    stocklist['code']=stocklist['code'].astype('int')
+    engine = create_engine(
+        'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
+    db_stocklist=pd.read_sql_query('SELECT * FROM codelist',con=engine)
+    luck_code=stocklist[~stocklist['code'].isin(db_stocklist['code'])]
+
+    if len(luck_code)!=0:
+        try:
+            luck_code.to_sql('codelist', engine, if_exists='append', index=None)
+        except Exception as e:
+            f = open('data/test_out.txt', 'a', encoding='cp932')
+            f.write('tick write error')
+            f.write(str(e))
+            f.close()
+
 def main():
     try:
         read_xlwings()
     except Exception as e:
         f = open('data/log.txt', 'a', encoding='cp932')
-        f.write(e)
+        f.write(str(e))
 
 
 if __name__ == '__main__':
