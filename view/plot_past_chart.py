@@ -9,18 +9,6 @@ import os
 # todo:出来高０でもレコードとしては格納すべき
 # todo:５分ずれているのでどこかで修正すべき
 def split_five_min_data(code: str, date: str):
-    # # 午前ぶん
-    # fname = code+'_'+date+'_1130.csv'
-    # input_fname = 'data/'+fname
-    # am_data = pd.read_csv(input_fname, header=0, index_col=0,
-    #                       encoding='cp932').iloc[::-1]
-    # # 午後ぶん
-    # fname = code+'_'+date+'_1500.csv'
-    # input_fname = 'data/'+fname
-    # pm_data = pd.read_csv(input_fname, header=0, index_col=0,
-    #                       encoding='cp932').iloc[::-1]
-    # pm_data = pm_data[pm_data['時刻'] > "11:30:00"]
-    # row_df = pd.concat([am_data, pm_data]).reset_index(drop=True)
     # 午前午後分かれてないパターン
     fname='data/'+date+'/'+code+'.csv'
     row_df = pd.read_csv(fname, header=0, index_col=0,

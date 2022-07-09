@@ -173,11 +173,6 @@ class UpdateCanvas(threading.Thread):
             # 色付け処理
             pre_buy_flag = True
             step_view_l = len(step_view)
-            # 500万以上の買いの強調初期化
-            detect_amount_1 = 5000000
-            detect_amount_2 = 2000000
-            emphasis_col_1 = 'red'
-            emphasis_col_2 = 'orange'
             for i in range(21):
                 self.canvas.itemconfig(
                     'step_volume_rec'+str(i), outline='white')
@@ -192,55 +187,27 @@ class UpdateCanvas(threading.Thread):
                     if row_df[index-21-first_buy_flag_i:index-20-first_buy_flag_i]['約定値'].values[0] < \
                             row_df[index-20-first_buy_flag_i:index-19-first_buy_flag_i]['約定値'].values[0]:
                         pre_buy_flag = True
-                        self.canvas.itemconfig(
-                            'step_volume'+str(step_view_l-1), fill='red')
-                        if step_view[0:1]['約定値'].values[0]*step_view[0:1]['出来高'].values[0] > detect_amount_1:
-                            self.canvas.itemconfig('step_volume_rec'+str(step_view_l-1),
-                                                   outline=emphasis_col_1)
-                        elif step_view[0:1]['約定値'].values[0]*step_view[0:1]['出来高'].values[0] > detect_amount_2:
-                            self.canvas.itemconfig('step_volume_rec'+str(step_view_l-1),
-                                                   outline=emphasis_col_2)
+                        self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,True)
                         break
                     elif row_df[index-21-first_buy_flag_i:index-20-first_buy_flag_i]['約定値'].values[0] > \
                             row_df[index-20-first_buy_flag_i:index-19-first_buy_flag_i]['約定値'].values[0]:
                         pre_buy_flag = False
-                        self.canvas.itemconfig(
-                            'step_volume'+str(step_view_l-1), fill='blue')
+                        self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,False)
                         break
                     first_buy_flag_i += 1
             # 最初の売買以降の処理
             for sv_index in range(1, step_view_l):
                 if step_view[sv_index-1:sv_index]['約定値'].values[0] < step_view[sv_index:sv_index+1]['約定値'].values[0]:
                     pre_buy_flag = True
-                    self.canvas.itemconfig(
-                        'step_volume'+str(step_view_l-sv_index-1), fill='red')
-                    if step_view[sv_index:sv_index+1]['約定値'].values[0] *\
-                            step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_1:
-                        self.canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
-                                               outline=emphasis_col_1)
-                    elif step_view[sv_index:sv_index+1]['約定値'].values[0] *\
-                            step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_2:
-                        self.canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
-                                               outline=emphasis_col_2)
+                    self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,True)
                 elif step_view[sv_index-1:sv_index]['約定値'].values[0] > step_view[sv_index:sv_index+1]['約定値'].values[0]:
                     pre_buy_flag = False
-                    self.canvas.itemconfig(
-                        'step_volume'+str(step_view_l-sv_index-1), fill='blue')
+                    self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,False)
                 else:
                     if pre_buy_flag:
-                        self.canvas.itemconfig(
-                            'step_volume'+str(step_view_l-sv_index-1), fill='red')
-                        if step_view[sv_index:sv_index+1]['約定値'].values[0] *\
-                                step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_1:
-                            self.canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
-                                                   outline=emphasis_col_1)
-                        elif step_view[sv_index:sv_index+1]['約定値'].values[0] *\
-                                step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_2:
-                            self.canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
-                                                   outline=emphasis_col_2)
+                        self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,True)
                     else:
-                        self.canvas.itemconfig(
-                            'step_volume'+str(step_view_l-sv_index-1), fill='blue')
+                        self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,False)
 
             step_view = step_view.iloc[::-1].reset_index(drop=True)
             for sv_index, sv_data in step_view.iterrows():
@@ -425,6 +392,38 @@ class UpdateCanvas(threading.Thread):
                 vwap_dev_rate_col = '#ff0000'
             self.canvas.itemconfig('vwap_dev_rate', text=str(
                 vwap_dev_rate), fill=vwap_dev_rate_col)
+
+    def fill_step_col(self, canvas:tkinter.Canvas, step_view_l:int,sv_index:int,step_view:pd.DataFrame,buy_flag:bool):
+        # 500万以上の買いの強調初期化
+        detect_amount_1 = 5000000
+        detect_amount_2 = 2000000
+        emphasis_col_1 = 'red'
+        emphasis_col_2 = 'orange'
+        # 500万以上の売りの強調初期化
+        emphasis_col_3 = 'blue'
+        emphasis_col_4 = 'skyblue'
+        if buy_flag:
+            canvas.itemconfig(
+                'step_volume'+str(step_view_l-sv_index-1), fill='red')
+            if step_view[sv_index:sv_index+1]['約定値'].values[0] *\
+                    step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_1:
+                canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
+                                        outline=emphasis_col_1)
+            elif step_view[sv_index:sv_index+1]['約定値'].values[0] *\
+                    step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_2:
+                canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
+                                        outline=emphasis_col_2)
+        else:
+            canvas.itemconfig(
+                'step_volume'+str(step_view_l-sv_index-1), fill='blue')
+            if step_view[sv_index:sv_index+1]['約定値'].values[0] *\
+                    step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_1:
+                canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
+                                        outline=emphasis_col_3)
+            elif step_view[sv_index:sv_index+1]['約定値'].values[0] *\
+                    step_view[sv_index:sv_index+1]['出来高'].values[0] > detect_amount_2:
+                canvas.itemconfig('step_volume_rec'+str(step_view_l-sv_index-1),
+                                        outline=emphasis_col_4)
 
 # recal_past_chatでつかう関数
 
