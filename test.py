@@ -509,6 +509,22 @@ def auto_add_codelist():
         f.write('tick write error')
         f.write(str(e))
         f.close()
+
+def db_fetch_test():
+    db_config={
+        'user':test_conf.db_user,
+        'password':test_conf.db_pass,
+        'host':test_conf.db_ip,
+        'database':'stock'
+    }
+    cnx=mysql.connector.connect(**db_config)
+    cur=cnx.cursor(buffered=True)
+    cur.execute('select exists(select * from getdate where  (`date` IN (\'2022-02-15\')) AND (code=5029));')
+    cnx.commit()
+    if cur.fetchone()[0]==0:
+        print('nakatta')
+    else:
+        print('atta')
     
 
 
@@ -536,4 +552,5 @@ if __name__ == '__main__':
     # tick_filter(5000)
     # save_tick()
     # save_error_step()
-    auto_add_codelist()
+    # auto_add_codelist()
+    db_fetch_test()

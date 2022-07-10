@@ -154,7 +154,7 @@ class Replay_Chart():
                         int(in_date[6:8]))-timedelta(days=1)
         while not self.is_bisday(tmp_date):
             tmp_date = tmp_date-timedelta(days=1)
-        return tmp_date.strftime('%Y%m%d')
+        return tmp_date
 
     def set_window_title(self, code, in_date):
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
@@ -324,15 +324,8 @@ class Replay_Chart():
 
     def draw_p(self, tree, canvas, code, DATE, CANDLE_WIDTH, predate):
         # キャンバスを動かすやつ
-        if os.path.isfile('data/'+predate+'/'+code+'.csv'):
-            candle_rate, volume_rate, max_val, min_val, index = \
-                plot_past_chart.plot(canvas, code, predate)
-        else:
-            candle_rate=1
-            volume_rate=1
-            max_val=0
-            min_val=999999
-            index=0
+        candle_rate, volume_rate, max_val, min_val, index = \
+            plot_past_chart.plot(canvas, code, predate)
         self.uc = UpdateCanvas(tree, canvas, code, DATE, CANDLE_WIDTH,
                                candle_rate, volume_rate, max_val, min_val, index)
 

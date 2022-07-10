@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 import tkinter
 import os
+from sqlalchemy import create_engine
+import db_conf
+import mysql.connector
 
 # 前日とかのチャートをプロットするやつ
 
@@ -13,6 +16,10 @@ def split_five_min_data(code: str, date: str):
     fname='data/'+date+'/'+code+'.csv'
     row_df = pd.read_csv(fname, header=0, index_col=0,
                          encoding='cp932').iloc[::-1].reset_index(drop=True)
+    # engine = create_engine(
+    #     'mysql+mysqlconnector://'+db_conf.db_user+':'+db_conf.db_pass+'@'+db_conf.db_ip+'/stock')
+    # row_df = pd.read_sql_query('SELECT concat(cast(date as char),\' \',cast(time as char)) AS datetime,value,volume FROM step WHERE (`date` IN (\'2022-04-15\')) AND (code='+code+') ORDER BY dayindex ASC', \
+    #     con=engine, parse_dates={'datetime':'%Y-%m-%d %H:%M:%S'})
     # 出力予定のデータ
     five_min_data = pd.DataFrame(
         columns=["時刻", "始値", "終値", "高値", "低値", "買い出来高", "売り出来高", "出来高", "VWAP"])
@@ -95,9 +102,12 @@ five_min_data.index-1:  データ数(0からのカウントなので-1)
 """
 
 
-def plot(canvas, code, date):
+def plot(canvas:tkinter.Canvas, code:str, date:datetime.date):
+    if not data_isexist(code,date):
+        return 1,1,0,999999,0
+
     candle_width = 4
-    five_min_data = split_five_min_data(code, date)
+    five_min_data = split_five_min_data(code, date.strftime('%Y%m%d'))
     # 高値と低値から倍率を決める
     max_val = five_min_data['高値'].max()
     min_val = five_min_data['低値'].min()
@@ -152,7 +162,32 @@ def plot(canvas, code, date):
 
     return candle_rate, volume_rate, max_val, min_val, len(five_min_data.index)-1
 
+# todo:dateをstringにしたりいろいろしている所整理したい
+def data_isexist(code:str,date:datetime.date):
+    db_config={
+        'user':db_conf.db_user,
+        'password':db_conf.db_pass,
+        'host':db_conf.db_ip,
+        'database':'stock'
+    }
+    try:
+        cnx=mysql.connector.connect(**db_config)
+        cur=cnx.cursor(buffered=True)
+        cur.execute('select exists(select * from getdate where  (`date` IN (\''+date.strftime('%Y-%m-%d')+'\')) AND (code='+code+'));')
+        cnx.commit()
+        if cur.fetchone()[0]==0:
+            cur.close()
+            cnx.close()
+            return False
+        else:
+            cur.close()
+            cnx.close()
+            return True
+    except Exception as e:
+        print(e)
+        return False
 
+        
 def main():
     # root = tkinter.Tk()
     # root.title(u"GEI")
