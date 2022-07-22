@@ -100,35 +100,29 @@ class Replay_Chart():
                            tag='label_value', font=('', 10))
         canvas.create_text(930, 15, text='出来高',
                            tag='label_volume', font=('', 10))
-        # canvas.create_line(853, 0, 853, 450, fill='#c0c0c0', tag='split3')
-        # canvas.create_line(903, 0, 903, 450, fill='#c0c0c0', tag='split4')
-        canvas.create_line(953, 0, 953, 450, fill='#c0c0c0', tag='split5')
-        # canvas.create_line(0, 450, 1000, 450, tag='split_tickchart')
-        canvas.create_rectangle(953, 2, 968, 450, tag='progress_bar_outline',
+        canvas.create_text(985, 15, text='売買代金',
+                           tag='label_price', font=('', 10))
+        canvas.create_rectangle(1020, 2, 1035, 450, tag='progress_bar_outline',
                                 outline='#c0c0c0')
-        canvas.create_rectangle(953, 450, 968, 450, tag='progress_bar',
+        canvas.create_rectangle(1020, 450, 1035, 450, tag='progress_bar',
                                 outline='#c0c0c0', fill='#c0c0c0')
-        # canvas.create_text(998, 15, text='購入時刻', tag='label_time', font=('', 8))
-        # canvas.create_text(1048, 15, text='購入価格', tag='label_value', font=('', 8))
-        # canvas.create_text(1098, 15, text='売却時刻', tag='label_volume', font=('', 8))
-        # canvas.create_text(1148, 15, text='売却価格', tag='label_value', font=('', 8))
-        # canvas.create_text(1198, 15, text='利益', tag='label_volume', font=('', 8))
-        # canvas.create_line(968, 30, 1220, 30, tag='vsplit0')
-        canvas.create_line(800, 30, 953, 30, tag='step_vsplit0')
+        canvas.create_line(800, 30, 1020, 30, tag='step_vsplit0')
         for i in range(1, (450-30)//20):  # 21個
             y = 30+20*i
-            canvas.create_line(800, y, 953, y, fill='#c0c0c0',
+            canvas.create_line(800, y, 1020, y, fill='#c0c0c0',
                                tag='step_vsplit'+str(i))
         for i in range((450-30)//20):
             y = 40+20*i
             canvas.create_rectangle(
-                801, y-9, 952, y+9, tag='step_volume_rec'+str(i), outline='white')
-            canvas.create_text(
-                828, y, text='', tag='step_time'+str(i), font=('', 10))
+                801, y-9, 1019, y+9, tag='step_volume_rec'+str(i), outline='white')
+            canvas.create_text(828, y, text='', \
+                                tag='step_time'+str(i), font=('', 10))
             canvas.create_text(880, y, text='',
                                tag='step_value'+str(i), font=('', 10))
             canvas.create_text(930, y, text='',
                                tag='step_volume'+str(i), font=('', 10))
+            canvas.create_text(985, y, text='',
+                               tag='step_price'+str(i), font=('', 10))
         # 2%と4%の線
         self.canvas.create_line(0, 0, self.canvas.winfo_width(),
                                 0, width=1, fill='#3cb371', tag='two_per')
@@ -181,9 +175,11 @@ class Replay_Chart():
 
         self.root = tkinter.Tk()
         self.root.configure(bg='white')
-        self.root.geometry("1000x700")  # ウインドウサイズ（「幅x高さ」で指定）
+        self.root.geometry("1100x700")  # ウインドウサイズ（「幅x高さ」で指定）
         self.root.bind("<Return>",self.buy_button_click)
         self.root.bind("<space>",self.suspend_button_click)
+        self.root.bind("<Right>",self.draw_chart_click)
+        self.root.bind("<Key-s>",self.start_button_click)
         # 銘柄リスト：https://www.jpx.co.jp/markets/statistics-equities/misc/01.html
         self.set_window_title(CODE, DATE)
 
@@ -292,7 +288,7 @@ class Replay_Chart():
         side_panel = tkinter.Frame(self.root, relief=tkinter.SUNKEN)
         # キャンバスエリア
         self.canvas = tkinter.Canvas(
-            side_panel, width=1000, height=450, bg='white')
+            side_panel, width=1100, height=450, bg='white')
         self.canvas_layout(self.canvas)
         self.canvas.pack()
 

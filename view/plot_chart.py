@@ -166,7 +166,7 @@ class UpdateCanvas(threading.Thread):
 
             # プログレスバーの処理 長さが448
             prog_bar_y = 450-448*(index/len(row_df))
-            self.canvas.coords('progress_bar', 953, 450, 968, prog_bar_y)
+            self.canvas.coords('progress_bar', 1020, 450, 1035, prog_bar_y)
             # 歩みね表示の処理
             step_view = row_df[index-20 if index >= 20 else 0:index+1]\
                 .reset_index(drop=True)
@@ -217,6 +217,9 @@ class UpdateCanvas(threading.Thread):
                     'step_value'+str(sv_index), text=int(sv_data['約定値']))
                 self.canvas.itemconfig(
                     'step_volume'+str(sv_index), text=int(sv_data['出来高']))
+                step_price='{:,}'.format(int(sv_data['出来高']*sv_data['約定値']))[:-4]
+                self.canvas.itemconfig(
+                    'step_price'+str(sv_index), text=step_price)
             # ローソク足の処理
             gap = contract_price-ini_val
             candle_sx = 10 + (3+self.candle_width)*self.minutes_num

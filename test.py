@@ -526,7 +526,22 @@ def db_fetch_test():
     else:
         print('atta')
     
-
+def date_compare_test():
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+    row_df = pd.read_sql_query('SELECT concat(cast(date as char),\' \',cast(time as char)) AS datetime,value,volume FROM step WHERE (`date` IN (\'2022-04-15\')) AND (code=5029) ORDER BY dayindex DESC', \
+        con=engine, parse_dates={'datetime':'%Y-%m-%d %H:%M:%S'})
+    print(type(row_df['datetime'][0]))
+    print(type(row_df['datetime'].dt.to_pydatetime()[0]))
+    # row_df['datetime']=row_df.apply(lambda x:x['datetime'].to_pydatetime, axis=1)
+    row_df['datetime']=row_df['datetime'].dt.to_pydatetime()
+    print(row_df)
+    
+    fname='data/20220415/5029.csv'
+    csv_df = pd.read_csv(fname, header=0, index_col=0,
+                         encoding='cp932').iloc[::-1].reset_index(drop=True)
+    print(type(csv_df['時刻'][0]))
+    print(csv_df)
 
 
 
@@ -553,4 +568,5 @@ if __name__ == '__main__':
     # save_tick()
     # save_error_step()
     # auto_add_codelist()
-    db_fetch_test()
+    # db_fetch_test()
+    date_compare_test()
