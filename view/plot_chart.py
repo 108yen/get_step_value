@@ -183,16 +183,24 @@ class UpdateCanvas(threading.Thread):
                     'step_volume'+str(index), fill='red')
             else:
                 first_buy_flag_i = 0
+                # 500万以上の買いの強調初期化
+                detect_amount_1 = 5000000
+                detect_amount_2 = 2000000
+                emphasis_col_1 = 'red'
+                emphasis_col_2 = 'orange'
+                # 500万以上の売りの強調初期化
+                emphasis_col_3 = 'blue'
+                emphasis_col_4 = 'skyblue'
                 while index-21-first_buy_flag_i >= 0:
                     if row_df[index-21-first_buy_flag_i:index-20-first_buy_flag_i]['約定値'].values[0] < \
                             row_df[index-20-first_buy_flag_i:index-19-first_buy_flag_i]['約定値'].values[0]:
                         pre_buy_flag = True
-                        self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,True)
+                        self.fill_step_col(self.canvas,step_view_l,0,step_view,True)
                         break
                     elif row_df[index-21-first_buy_flag_i:index-20-first_buy_flag_i]['約定値'].values[0] > \
                             row_df[index-20-first_buy_flag_i:index-19-first_buy_flag_i]['約定値'].values[0]:
                         pre_buy_flag = False
-                        self.fill_step_col(self.canvas,step_view_l,sv_index,step_view,False)
+                        self.fill_step_col(self.canvas,step_view_l,0,step_view,False)
                         break
                     first_buy_flag_i += 1
             # 最初の売買以降の処理
@@ -216,8 +224,8 @@ class UpdateCanvas(threading.Thread):
                 self.canvas.itemconfig(
                     'step_value'+str(sv_index), text=int(sv_data['約定値']))
                 self.canvas.itemconfig(
-                    'step_volume'+str(sv_index), text=int(sv_data['出来高']))
-                step_price='{:,}'.format(int(sv_data['出来高']*sv_data['約定値']))[:-4]
+                    'step_volume'+str(sv_index), text=str(int(sv_data['出来高'])).rjust(6))
+                step_price='{:,}'.format(int(sv_data['出来高']*sv_data['約定値']))[:-5].rjust(8)
                 self.canvas.itemconfig(
                     'step_price'+str(sv_index), text=step_price)
             # ローソク足の処理

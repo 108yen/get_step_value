@@ -60,6 +60,8 @@ class Replay_Chart():
                 'step_value'+str(i), text='')
             self.canvas.itemconfig(
                 'step_volume'+str(i), text='')
+            self.canvas.itemconfig(
+                'step_price'+str(i), text='')
         for i in range(102):
             for item in ['line', 'rect', 'sell_volume', 'buy_volume', 'vwap']:
                 self.canvas.delete(item+str(i))
@@ -106,6 +108,7 @@ class Replay_Chart():
                                 outline='#c0c0c0')
         canvas.create_rectangle(1020, 450, 1035, 450, tag='progress_bar',
                                 outline='#c0c0c0', fill='#c0c0c0')
+        canvas.create_line(981, 30, 981, 450, fill='#c0c0c0', tag='split_digit')
         canvas.create_line(800, 30, 1020, 30, tag='step_vsplit0')
         for i in range(1, (450-30)//20):  # 21個
             y = 30+20*i
