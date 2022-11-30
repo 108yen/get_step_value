@@ -132,7 +132,8 @@ def remove_dupulicate_p(q, codelist):
             # 取り出し
             get_df_list = q.get(block=True, timeout=10)
             n += 1
-            print("\r残キュー数:"+str(q.qsize())+" 回数:"+str(n)+"   ", end="")
+            os.system('cls')
+            print("残キュー数:"+str(q.qsize())+" 回数:"+str(n)+"   ", end="")
             # 銘柄ごとに動く処理
             for index, code in enumerate(codelist):
                 df_list[code] = remove_duplicate(
@@ -151,19 +152,19 @@ def remove_dupulicate_p(q, codelist):
 
 def save_data(data, codelist):
     # 歩みね保存
-    today_str = datetime.datetime.today().strftime('%Y%m%d')
-    for code in tqdm(codelist):
-        data[code] = data[code].reset_index(drop=True)
-        new_dir_path = 'data/'+today_str
-        fname = new_dir_path+'/'+code+'.csv'
-        if os.path.isfile(fname):
-            fname = new_dir_path+'/_'+code+'.csv'
-        try:
-            os.makedirs(new_dir_path, exist_ok=True)
-            data[code].to_csv(fname, encoding='cp932')
-        except Exception as e:
-            print(code+':'+e)
-    print('csv保存完了')
+    # today_str = datetime.datetime.today().strftime('%Y%m%d')
+    # for code in tqdm(codelist):
+    #     data[code] = data[code].reset_index(drop=True)
+    #     new_dir_path = 'data/'+today_str
+    #     fname = new_dir_path+'/'+code+'.csv'
+    #     if os.path.isfile(fname):
+    #         fname = new_dir_path+'/_'+code+'.csv'
+    #     try:
+    #         os.makedirs(new_dir_path, exist_ok=True)
+    #         data[code].to_csv(fname, encoding='cp932')
+    #     except Exception as e:
+    #         print(code+':'+e)
+    # print('csv保存完了')
 
     # raspidbに送る処理
     try:

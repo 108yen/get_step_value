@@ -1,7 +1,9 @@
 import datetime
 from logging import exception
+from multiprocessing.reduction import duplicate
 import queue
 import time
+from tokenize import Double
 from matplotlib.pyplot import get
 import pandas as pd
 # import pywintypes
@@ -543,6 +545,45 @@ def date_compare_test():
     print(type(csv_df['時刻'][0]))
     print(csv_df)
 
+# codelistは手動更新する必要あり
+def import_csv_step():
+    filelist = glob.glob('data/input_step_data/*.csv')
+    engine = create_engine(
+        'mysql+mysqlconnector://'+test_conf.db_user+':'+test_conf.db_pass+'@'+test_conf.db_ip+'/stock')
+        
+    getdate_df = pd.read_sql_query('SELECT * FROM getdate', con=engine)
+    getdate_to_db=pd.DataFrame(columns=['date','code','tick'])
+
+    for filepath in tqdm(filelist):
+        code = int(filepath[21:25])
+        fname='E:/Program/trade/get_step_value/data/input_step_data/'+str(code)+'.csv'
+        step_data=pd.read_csv(fname,header=0,encoding='cp932')
+        drop_dupulicate_date_df=step_data[~step_data['日付'].duplicated()]['日付']
+        
+        for date in drop_dupulicate_date_df:
+            # print(str(code)+':'+date)
+            check_is_exist= getdate_df[(getdate_df['code']==code) & (getdate_df['date']==datetime.date(int(date[:4]),int(date[5:7]),int(date[8:10])))]
+            if len(check_is_exist)==0:
+                data_to_db_df=step_data[step_data['日付']==date].reset_index(drop=True).set_axis(['date','time','value','volume'],axis='columns')
+                # print(str(code)+':'+date)
+                # print(data_to_db_df)
+                # data_to_db_df.rename(columns={'日付':'date','時間 ':'time','約定値':'value','出来高':'volume'},inplace=True)
+                to_date=lambda x:datetime.date(int(x[:4]),int(x[5:7]),int(x[8:10]))
+                to_time=lambda x:datetime.time(int(x[:2]),int(x[3:5]),int(x[6:8]))
+                to_float=lambda x:float(str(x).replace(',',''))
+                data_to_db_df['date']=data_to_db_df['date'].apply(to_date)
+                data_to_db_df['time']=data_to_db_df['time'].apply(to_time)
+                data_to_db_df['value']=data_to_db_df['value'].apply(to_float)
+                data_to_db_df['volume']=data_to_db_df['volume'].apply(to_float)
+                data_to_db_df['code']=code
+                data_to_db_df['dayindex']=data_to_db_df.index
+
+                getdate_to_db=pd.concat([getdate_to_db,pd.DataFrame([[datetime.date(int(date[:4]),int(date[5:7]),int(date[8:10])),code,len(data_to_db_df)]],columns=['date','code','tick'])],ignore_index=True)
+                # print(data_to_db_df)
+                data_to_db_df.to_sql('step', engine, if_exists='append', index=None)
+    
+    # print(getdate_to_db)
+    getdate_to_db.to_sql('getdate', engine, if_exists='append', index=None)
 
 
 if __name__ == '__main__':
@@ -569,4 +610,5 @@ if __name__ == '__main__':
     # save_error_step()
     # auto_add_codelist()
     # db_fetch_test()
-    date_compare_test()
+    # date_compare_test()
+    import_csv_step()
