@@ -123,8 +123,10 @@ def remove_dupulicate_p(q, codelist):
     fin_pm = datetime.datetime.strptime("15:00:30", '%H:%M:%S').time()
     # dataframeを銘柄分作成（結構頭悪い処理）
     df_list = {}
+    analysis_result={}
     for code in codelist:
         df_list[code] = pd.DataFrame(columns=["時刻", "出来高", "約定値"])
+        analysis_result[code]=pd.DataFrame(columns=['時刻','売買代金'])
 
     n = 0
     while True:
@@ -138,6 +140,12 @@ def remove_dupulicate_p(q, codelist):
             for index, code in enumerate(codelist):
                 df_list[code] = remove_duplicate(
                     df_list[code], get_df_list[code])
+
+                analysis_result[code]=buy_analysis(analysis_result[code],get_df_list[code])
+                if not analysis_result[code].empty():
+                    print(str(code))
+                    print(analysis_result[code].head())
+
         except queue.Empty:
             # print('\nタイムアウト')
             # ひけてたら終了
@@ -242,6 +250,29 @@ def auto_add_codelist():
             f.write('tick write error')
             f.write(str(e))
             f.close()
+
+def buy_analysis(origin_df,input_df):
+    input_df=input_df[input_df['時刻']!='--------']
+    col=['時刻','売買代金']
+    result_df=pd.DataFrame(columns=col)
+    if len(input_df[0:1]['時刻'].values)!=0:
+        input_df=input_df[::-1].reset_index(drop=True)
+        p_value=0.0
+        isBuy=False
+        for index,record in enumerate(input_df):
+            trading_value=record['出来高']*record['約定値']
+            if record['約定値']>p_value:
+                isBuy=True
+            elif record['約定値']<p_value:
+                isBuy=False
+
+            if trading_value>8000000 and isBuy:
+                tmp_df=pd.DataFrame([[record['時刻'],trading_value]],columns=col)
+                result_df=pd.concat([result_df,tmp_df],axis=0).reset_index(drop=True)
+            p_value=record['約定値']
+        origin_df=pd.concat([origin_df,result_df],axis=0).drop_duplicates().reset_index(drop=True)
+
+    return origin_df
 
 def main():
     try:
