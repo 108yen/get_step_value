@@ -18,6 +18,7 @@ from sqlalchemy import create_engine
 import mysql.connector
 from tqdm import tqdm
 import db_conf
+import xlwings as xw
 
 
 class Oliginal_Holiday(jpholiday.OriginalHoliday):
@@ -57,19 +58,25 @@ def set_macro(sheet, codelist):
 
 def get_step_value(q, codelist):
     # エクセル開いたりする処理
-    app, pid = start_ex.xw_apps_add_fixed()
-    # app.visible = False
-    wb = app.books.add()
-    sheet = wb.sheets["Sheet1"]
+    # app = start_ex.xw_apps_add_fixed()
+    # wb=app.books[0]
+
+    wb = xw.Book()
+    wb.app.api.RegisterXLL(
+        r"C:/Users/kazuk/AppData/Local/MarketSpeed2/Bin/rss/MarketSpeed2_RSS_64bit.xll")
+    sheet = wb.sheets.add()
     set_macro(sheet, codelist)
     wb.save('data/RSS_step_value_reader.xlsx')
 
     hwnd = win32gui.FindWindow(None, 'RSS_step_value_reader.xlsx - Excel')
+    while not win32gui.IsWindowEnabled(hwnd):
+        time.sleep(2)
+
     while sheet.cells(3, 1).value is None:
         print('RSS接続再試行')
         rect = win32gui.GetWindowRect(hwnd)
         ctypes.windll.user32.SetForegroundWindow(hwnd)
-        pyautogui.click(rect[0]+1520, rect[1]+100)
+        pyautogui.click(rect[0]+1220, rect[1]+110)
         pyautogui.click(rect[0]+50, rect[1]+200)
         time.sleep(3)
     win32gui.ShowWindow(hwnd, 6)
@@ -109,8 +116,8 @@ def get_step_value(q, codelist):
         #     print("取得回数："+str(n))
 
     wb.close()
-    app.kill()
-    os.remove('data/RSS_step_value_reader.xlsx')
+    # app.kill()
+    # os.remove('data/RSS_step_value_reader.xlsx')
 
 
 def remove_dupulicate_p(q, codelist):
@@ -141,10 +148,11 @@ def remove_dupulicate_p(q, codelist):
                 df_list[code] = remove_duplicate(
                     df_list[code], get_df_list[code])
 
-                analysis_result[code]=buy_analysis(analysis_result[code],get_df_list[code])
-                if not analysis_result[code].empty():
-                    print(str(code))
-                    print(analysis_result[code].head())
+                # analysis_result[code]=buy_analysis(analysis_result[code],get_df_list[code])
+
+                # if not analysis_result[code].empty():
+                #     print(code)
+                #     print(analysis_result[code].head())
 
         except queue.Empty:
             # print('\nタイムアウト')
@@ -155,7 +163,7 @@ def remove_dupulicate_p(q, codelist):
         except Exception as e:
             print(e)
 
-    save_data(df_list, codelist)
+    # save_data(df_list, codelist)
 
 
 def save_data(data, codelist):
@@ -252,14 +260,14 @@ def auto_add_codelist():
             f.close()
 
 def buy_analysis(origin_df,input_df):
-    input_df=input_df[input_df['時刻']!='--------']
+    input_df_c=input_df[input_df['時刻']!='--------']
     col=['時刻','売買代金']
     result_df=pd.DataFrame(columns=col)
-    if len(input_df[0:1]['時刻'].values)!=0:
-        input_df=input_df[::-1].reset_index(drop=True)
+    if len(input_df_c) != 0 and len(input_df_c[0:1]['時刻'].values)!=0:
+        input_df_c=input_df_c[::-1].reset_index(drop=True)
         p_value=0.0
         isBuy=False
-        for index,record in enumerate(input_df):
+        for index,record in enumerate(input_df_c):
             trading_value=record['出来高']*record['約定値']
             if record['約定値']>p_value:
                 isBuy=True

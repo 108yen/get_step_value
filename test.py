@@ -556,7 +556,7 @@ def import_csv_step():
 
     for filepath in tqdm(filelist):
         code = int(filepath[21:25])
-        fname='E:/Program/trade/get_step_value/data/input_step_data/'+str(code)+'.csv'
+        fname='G:/Program/trade/get_step_value/data/input_step_data/'+str(code)+'.csv'
         step_data=pd.read_csv(fname,header=0,encoding='cp932')
         drop_dupulicate_date_df=step_data[~step_data['日付'].duplicated()]['日付']
         

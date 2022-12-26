@@ -7,7 +7,7 @@ import xlwings as xw
 
 
 def get_xl_path() -> Path:
-    #Excelのインストール先パスを返す関数
+    # Excelのインストール先パスを返す関数
     subprocess_rtn = (
         subprocess
         .run(['assoc', '.xlsx'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -25,22 +25,25 @@ def get_xl_path() -> Path:
     return Path(xl_path)
 
 
-def xw_apps_add_fixed() -> xw.App:
-    #Excelインスタンスを生成する関数
+def xw_apps_add_fixed(add_book: bool = False) -> xw.App:
+    # Excelインスタンスを生成する関数
     xl_path = get_xl_path()
     num = xw.apps.count
-    pid = subprocess.Popen([str(xl_path), '/e']).pid
+    pid = subprocess.Popen(
+        [str(xl_path), '/x /e']).pid
 
-    #xlwingsから認識できるまで待つ
+    # xlwingsから認識できるまで待つ
     while xw.apps.count == num:
+        print('waiting')
         time.sleep(1)
 
-    #xlwingsから使用できるようになるまで待つ
+    # xlwingsから使用できるようになるまで待つ
     while True:
         try:
             xw.apps[pid].activate()
             break
         except:
+            print('except'+str(xw.apps))
             time.sleep(1)
 
-    return xw.apps[pid],pid
+    return xw.apps[pid]
