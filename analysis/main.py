@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import xlwings as xw
 import win32gui
@@ -18,10 +19,17 @@ class BigTrade:
             self.bigTradeList[code] = pd.DataFrame(
                 columns=["time", "trading_value", "isBuy"])
 
-    def get_RSS_data(self):
+    def get_RSS_data(self,sheet):
+        self.sheet=sheet
+        # self.sheet=sheet
         for index, code in enumerate(self.codelist):
-            RSS_data = pd.DataFrame(sheet.range(
+            try:
+                RSS_data = pd.DataFrame(self.sheet.range(
                 (3, 1+index*3), (103, 3+index*3)).value, columns=["time", "volume", "value"])
+            except Exception as e:
+                print(e)
+                return
+                
             # 計算のため、余計なデータ削除
             RSS_data = RSS_data[RSS_data['time'] != '--------'].dropna()
             RSS_data['trading_value'] = RSS_data['volume']*RSS_data['value']
@@ -32,6 +40,7 @@ class BigTrade:
                 [self.bigTradeList[code], big_trade]).drop_duplicates()
 
     def print_tradingvalue(self):
+        os.system('cls')
         for index, code in enumerate(self.codelist):
             # 5分間抽出
             fivemin_delay = datetime.datetime.now()-datetime.timedelta(minutes=5)
@@ -50,6 +59,10 @@ class BigTrade:
     def filter_big_trade(self, RSS_data) -> pd.DataFrame:
         reverse_RSS_data = RSS_data.iloc[::-1].reset_index(drop=True)
         result = pd.DataFrame()
+
+        if len(reverse_RSS_data)==0:
+            return result
+
         time = reverse_RSS_data.loc[0, 'time']
         value = reverse_RSS_data.loc[0, 'value']
         isBuy = True
@@ -72,13 +85,13 @@ class BigTrade:
                 time = item['time']
                 sum_tradingvalue = item['trading_value']
 
-            value = item['value']
             if item['value'] > value:
                 # print('買い')
                 isBuy = True
             elif item['value'] < value:
                 # print('売り')
                 isBuy = False
+            value = item['value']
         else:
             if sum_tradingvalue > 8000000:
                 add_df = pd.DataFrame([[time, sum_tradingvalue, isBuy]],
@@ -105,11 +118,11 @@ def enable_RSS():
 
     while sheet.cells(3, 1).value is None:
         print('RSS接続再試行')
-        time.sleep(3)
         rect = win32gui.GetWindowRect(hwnd)
         ctypes.windll.user32.SetForegroundWindow(hwnd)
         pyautogui.click(rect[0]+1220, rect[1]+110)
         pyautogui.click(rect[0]+50, rect[1]+200)
+        time.sleep(3)
     win32gui.ShowWindow(hwnd, 6)
 
 
@@ -121,6 +134,7 @@ if __name__ == '__main__':
     wb = xw.Book()
     wb.app.api.RegisterXLL(
         r"C:/Users/kazuk/AppData/Local/MarketSpeed2/Bin/rss/MarketSpeed2_RSS_64bit.xll")
+    wb.activate()
     sheet = wb.sheets.add()
 
     set_macro(sheet, codelist)
@@ -132,7 +146,7 @@ if __name__ == '__main__':
     fin_pm = datetime.datetime.strptime("15:00:30", '%H:%M:%S').time()
     while datetime.datetime.now().time() < fin_pm:
         time.sleep(1)
-        bigTrade.get_RSS_data()
+        bigTrade.get_RSS_data(sheet)
         bigTrade.print_tradingvalue()
 
     wb.close()
