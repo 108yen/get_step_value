@@ -5,23 +5,31 @@ import threading
 import time
 import xlwings as xw
 import pandas as pd
+from rpa import RPA
 from main_window import MainWindow
+import pythoncom
 
 
 class BigTrade(threading.Thread):
-    def __init__(self, stocklist, sheet: xw.Sheet, mainWindow: MainWindow) -> None:
+    def __init__(self, mainWindow: MainWindow) -> None:
         super(BigTrade, self).__init__()
         self.bigTradeList = {}
-        self.stocklist = stocklist
-        self.codelist = stocklist['銘柄コード']
-        self.sheet: xw.Sheet = sheet
+        self.rpa = RPA()
+        self.stocklist = self.rpa.get_stocklist()
+        self.codelist = self.stocklist['銘柄コード']
+        self.wb = xw.Book('RSS_step_value_reader.xlsx')
+        self.sheet = self.wb.sheets['RSS']
         self.mainWindow = mainWindow
 
         for code in self.codelist:
             self.bigTradeList[code] = pd.DataFrame(
                 columns=["time", "trading_value", "isBuy"])
 
+    # def get_sheet(self):
+    #     xw.apps()
+
     def run(self) -> None:
+        pythoncom.CoInitialize()
 
         fin_pm = datetime.datetime.strptime("15:00:30", '%H:%M:%S').time()
         # while datetime.datetime.now().time() < fin_pm:
@@ -31,7 +39,7 @@ class BigTrade(threading.Thread):
             self.update_tree()
             # self.print_tradingvalue()
 
-        # wb.close() joinでできる
+        self.rpa.close_wb()
 
     def get_RSS_data(self):
         for index, code in enumerate(self.codelist):
@@ -60,14 +68,15 @@ class BigTrade(threading.Thread):
             recent_trade = recent_trade[recent_trade['isBuy']].reset_index(
                 drop=True)
             symbol_info = self.stocklist[self.stocklist['銘柄コード']
-                                            == code].iloc[0]
-            tree_val=self.mainWindow.get_tree(symbol_info['銘柄名'])
+                                         == code].iloc[0]
+            tree_val = self.mainWindow.get_tree(symbol_info['銘柄名'])
 
             if len(recent_trade) != 0:
-                self.mainWindow.update_tree(code,symbol_info['銘柄名'],len(recent_trade),recent_trade['trading_value'].sum())
-            elif tree_val!=None:
+                print('update')
+                self.mainWindow.update_tree(code, symbol_info['銘柄名'], len(
+                    recent_trade), recent_trade['trading_value'].sum())
+            elif tree_val != None:
                 self.mainWindow.delete_tree(symbol_info['銘柄名'])
-
 
     def print_tradingvalue(self):
         os.system('cls')

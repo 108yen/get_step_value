@@ -18,7 +18,7 @@ class RPA:
         self.wb.app.api.RegisterXLL(
             r"C:/Users/kazuk/AppData/Local/MarketSpeed2/Bin/rss/MarketSpeed2_RSS_64bit.xll")
         self.wb.activate()
-        self.sheet = self.wb.sheets.add()
+        self.sheet = self.wb.sheets.add('RSS')
 
         self.set_macro(self.sheet, codelist)
         self.wb.save('data/RSS_step_value_reader.xlsx')
@@ -31,9 +31,11 @@ class RPA:
     def get_sheet(self):
         return self.sheet
 
+    def get_app(self):
+        return self.wb.app
+
     def close_wb(self):
         self.wb.close()
-
 
  
 
