@@ -1,10 +1,11 @@
 from main_window import MainWindow
-from big_trade import BigTrade
-from rpa import RPA
+import wx
+import wx.lib.newevent
 
 if __name__ == '__main__':
-    mainWindow=MainWindow()
-    bigTrade=BigTrade(mainWindow)
-    bigTrade.start()
-    mainWindow.start_mainloop()
+    app = wx.App()
+    # デバッグするときはwx.PySimpleApp()を使う
+    # app = wx.PySimpleApp()
+    MainWindow(None, wx.ID_ANY, 'bigtrade')
+    app.MainLoop()
 

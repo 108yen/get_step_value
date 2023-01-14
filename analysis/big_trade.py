@@ -6,40 +6,56 @@ import time
 import xlwings as xw
 import pandas as pd
 from rpa import RPA
-from main_window import MainWindow
 import pythoncom
+import wx
+import wx.lib.newevent
 
 
 class BigTrade(threading.Thread):
-    def __init__(self, mainWindow: MainWindow) -> None:
+    def __init__(self, mainWindow, myThreadEvent) -> None:
         super(BigTrade, self).__init__()
         self.bigTradeList = {}
+        self.mainWindow = mainWindow
+        self.myTheadEvent = myThreadEvent
+
+    # def get_sheet(self):
+    #     xw.apps()
+    def stop(self):
+        self.keepGoing = False
+
+    def isRunning(self):
+        return self.running
+
+    def run(self) -> None:
+        self.keepGoing = True
+        self.running = True
+
+        # excel起動
+        self.start_excel()
+
+        fin_pm = datetime.datetime.strptime("15:00:30", '%H:%M:%S').time()
+        while datetime.datetime.now().time() < fin_pm and self.keepGoing:
+        # while self.keepGoing:
+            time.sleep(1)
+            self.get_RSS_data()
+            # self.update_tree()
+            self.print_tradingvalue()
+            # self.test_print()
+
+        self.rpa.close_wb()
+        self.running = False
+
+    def start_excel(self):
+        pythoncom.CoInitialize()
         self.rpa = RPA()
         self.stocklist = self.rpa.get_stocklist()
         self.codelist = self.stocklist['銘柄コード']
         self.wb = xw.Book('RSS_step_value_reader.xlsx')
         self.sheet = self.wb.sheets['RSS']
-        self.mainWindow = mainWindow
-
+        # データフレーム用意
         for code in self.codelist:
             self.bigTradeList[code] = pd.DataFrame(
                 columns=["time", "trading_value", "isBuy"])
-
-    # def get_sheet(self):
-    #     xw.apps()
-
-    def run(self) -> None:
-        pythoncom.CoInitialize()
-
-        fin_pm = datetime.datetime.strptime("15:00:30", '%H:%M:%S').time()
-        # while datetime.datetime.now().time() < fin_pm:
-        while True:
-            time.sleep(1)
-            self.get_RSS_data()
-            self.update_tree()
-            # self.print_tradingvalue()
-
-        self.rpa.close_wb()
 
     def get_RSS_data(self):
         for index, code in enumerate(self.codelist):
@@ -47,7 +63,7 @@ class BigTrade(threading.Thread):
                 RSS_data = pd.DataFrame(self.sheet.range(
                     (3, 1+index*3), (103, 3+index*3)).value, columns=["time", "volume", "value"])
             except Exception as e:
-                print(e)
+                print(f'get RSS data Error: {e}')
                 return
 
             # 計算のため、余計なデータ削除
@@ -78,8 +94,32 @@ class BigTrade(threading.Thread):
             elif tree_val != None:
                 self.mainWindow.delete_tree(symbol_info['銘柄名'])
 
+    def test_print(self):
+        display_message = ''
+        for index, code in enumerate(self.codelist):
+            if len(self.bigTradeList[code]) != 0:
+                symbol_info = self.stocklist[self.stocklist['銘柄コード']
+                                             == code].iloc[0]
+                # 銘柄情報
+                # print('\n'+symbol_info['銘柄コード']+' '+symbol_info['銘柄名'])
+                display_message += symbol_info['銘柄コード'] + \
+                    ' '+symbol_info['銘柄名']+'\n'
+                # 大人買い情報
+                # print(recent_trade)
+                for index, item in self.bigTradeList[code].iterrows():
+                    # print(index+' '+item['time']+' '+item['trading_value'])
+                    i_time = item['time']
+                    i_trading_value = ("{:,.2f}".format(
+                        item['trading_value']))[:-8]
+                    display_message += f'{index} {i_time} {i_trading_value}万\n'
+
+        evt = self.myTheadEvent(msg=display_message)
+        wx.PostEvent(self.mainWindow, evt)
+        # print(display_message)
+
     def print_tradingvalue(self):
-        os.system('cls')
+        display_message = ''
+        # os.system('cls')
         for index, code in enumerate(self.codelist):
             # 5分間抽出
             fivemin_delay = datetime.datetime.now()-datetime.timedelta(minutes=5)
@@ -92,7 +132,9 @@ class BigTrade(threading.Thread):
                 symbol_info = self.stocklist[self.stocklist['銘柄コード']
                                              == code].iloc[0]
                 # 銘柄情報
-                print('\n'+symbol_info['銘柄コード']+' '+symbol_info['銘柄名'])
+                # print('\n'+symbol_info['銘柄コード']+' '+symbol_info['銘柄名'])
+                display_message += symbol_info['銘柄コード'] + \
+                    ' '+symbol_info['銘柄名']+'\n'
                 # 大人買い情報
                 # print(recent_trade)
                 for index, item in recent_trade.iterrows():
@@ -100,7 +142,11 @@ class BigTrade(threading.Thread):
                     i_time = item['time']
                     i_trading_value = ("{:,.2f}".format(
                         item['trading_value']))[:-8]
-                    print(f'{index} {i_time} {i_trading_value}万')
+                    display_message += f'{index} {i_time} {i_trading_value}万\n'
+
+        evt = self.myTheadEvent(msg=display_message)
+        wx.PostEvent(self.mainWindow, evt)
+        # print(display_message)
 
     # RSS_data=pd.DataFrame(columns = ["time", "volume", "value", "trading_value"])
 
